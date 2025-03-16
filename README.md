@@ -2,7 +2,7 @@
 
 A mod for REPO that allows player upgrades to spawn naturally in levels instead of only being available in the shop.
 
-![R E P O _2025-03-15_17-00-57_-_Trim-Trim-ezgif com-video-to-gif-converter (2)](https://github.com/user-attachments/assets/11f842b2-cf3f-4f8f-9df7-52eefbc8cdf7)
+![R E P O](https://github.com/user-attachments/assets/11f842b2-cf3f-4f8f-9df7-52eefbc8cdf7)
 
 ## Description
 This mod modifies the game to add shop upgrade items to the pool of valuable items that can spawn in levels. Now you can find upgrades while exploring instead of only being able to purchase them.
