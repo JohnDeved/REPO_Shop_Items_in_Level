@@ -26,3 +26,4 @@ Discord: can_not_read_properties_of
 
 ## Links
 - [GitHub Repository](https://github.com/JohnDeved/REPO_Shop_Items_in_Level)
+- [Thunderstore](https://thunderstore.io/c/repo/p/itsUndefined/Shop_Items_Spawn_in_Level/)
