@@ -28,6 +28,39 @@
     <Message Text="Copying $(TargetPath) to $(PluginFolder)" Importance="high" />
   </Target>
 
+  <!-- Package files for Thunderstore.io -->
+  <Target Name="PackageThunderstoreMod" AfterTargets="Build">
+    <PropertyGroup>
+      <ThunderstoreDir>$(ProjectDir)Thunderstore</ThunderstoreDir>
+      <PackageDir>$(ThunderstoreDir)\package</PackageDir>
+      <ZipFile>$(ThunderstoreDir)\$(AssemblyName)-$(Version).zip</ZipFile>
+    </PropertyGroup>
+    
+    <!-- Create necessary directories -->
+    <MakeDir Directories="$(ThunderstoreDir)" Condition="!Exists('$(ThunderstoreDir)')" />
+    <MakeDir Directories="$(PackageDir)" Condition="!Exists('$(PackageDir)')" />
+    
+    <!-- Clean the package directory -->
+    <RemoveDir Directories="$(PackageDir)" />
+    <MakeDir Directories="$(PackageDir)" />
+    
+    <!-- Copy files to the package directory -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageDir)" />
+    <Copy SourceFiles="$(ProjectDir)manifest.json" DestinationFolder="$(PackageDir)" />
+    <Copy SourceFiles="$(ProjectDir)README.md" DestinationFolder="$(PackageDir)" />
+    <Copy SourceFiles="$(ProjectDir)icon.png" DestinationFolder="$(PackageDir)" Condition="Exists('$(ProjectDir)icon.png')" />
+    
+    <!-- Check if icon.png exists, if not, warn the user -->
+    <Warning Text="icon.png not found! This file is required for Thunderstore. Please add an icon.png file (256x256 PNG recommended)." 
+             Condition="!Exists('$(ProjectDir)icon.png')" />
+    
+    <!-- Create zip file using PowerShell -->
+    <Delete Files="$(ZipFile)" Condition="Exists('$(ZipFile)')" />
+    <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(PackageDir)\*' -DestinationPath '$(ZipFile)' -Force&quot;" />
+    
+    <Message Text="Thunderstore package created at $(ZipFile)" Importance="high" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
