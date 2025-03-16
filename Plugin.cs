@@ -37,10 +37,14 @@ public class Plugin : BaseUnityPlugin
     [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SetupHost))]
     [HarmonyPrefix]
     public static void ValuableDirector_SetupHost(ValuableDirector __instance)
-    {        
-        Logger.LogInfo($"ValuableDirector.SetupHost Prefix Level: {LevelGenerator.Instance.Level.name}");
+    {
+        // if the level has no enemies, we can skip
+        if (!LevelGenerator.Instance.Level.HasEnemies)
+        {
+            return;
+        }
 
-        // Check if the level has valuables
+        // check if the level has valuables
         if (LevelGenerator.Instance.Level.ValuablePresets.Count == 0)
         {
             Logger.LogInfo("ValuablePresets is 0");
@@ -82,9 +86,9 @@ public class Plugin : BaseUnityPlugin
     [HarmonyPrefix]
     public static bool ValuableDirector_Spawn_Prefix(GameObject _valuable, ValuableVolume _volume, string _path)
     {
-        // Check if we are in multiplayer mode
+        // check if we are in multiplayer mode
         if (GameManager.instance.gameMode != 0) {
-            // this checks if the item is part of the itemDictionary, if so, we have to handle multiplayer spawn ourselves
+            // check if the item is part of the itemDictionary, if so, we have to handle multiplayer spawn ourselves
             if (StatsManager.instance.itemDictionary.ContainsKey(_valuable.name))
             {
                 Logger.LogInfo($"Highjacking Spawn for: {_valuable.name} with volume {_volume} at path {_path}");
