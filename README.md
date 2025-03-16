@@ -1,6 +1,6 @@
-# REPO Shop Items in Level
+# REPO Shop Items spawn in Level
 
-A mod for REPO that allows player upgrades to spawn naturally in levels instead of only being available in the shop.
+Allows player upgrades to spawn naturally in levels instead of only being available in the shop.
 
 ![R E P O](https://github.com/user-attachments/assets/11f842b2-cf3f-4f8f-9df7-52eefbc8cdf7)
 
