@@ -15,7 +15,8 @@ This mod modifies the game to add shop upgrade items to the pool of valuable ite
 - BepInEx-BepInExPack-5.4.2100
 
 ## Known Issues
-- Currently only supports item upgrades (more item types will be supported in the future via config updates)
+- Currently only supports item upgrades (more item types as well as custom spawn rates will be supported in the future via config updates)
+- Upgrades sometimes spawn in unreachable places, such as inside textures.
 
 ## Version History
 - 1.0.0: Initial release
