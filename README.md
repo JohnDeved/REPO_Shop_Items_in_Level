@@ -16,7 +16,7 @@ This mod modifies the game to add shop upgrade items to the pool of valuable ite
 
 ## Known Issues
 - Currently only supports item upgrades (more item types as well as custom spawn rates will be supported in the future via config updates)
-- Upgrades sometimes spawn in unreachable places, such as inside textures.
+- Upgrades sometimes spawn in unreachable places, such as inside objects.
 
 ## Version History
 - 1.0.0: Initial release
