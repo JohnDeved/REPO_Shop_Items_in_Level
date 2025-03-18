@@ -19,15 +19,15 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> UpgradeItemSpawnChance;
 
     private Harmony harmony;
-    
+
     // Static instance for script access
     public static Plugin Instance { get; private set; }
-        
+
     private void Awake()
     {
         // Set instance for script access
         Instance = this;
-        
+
         // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
@@ -35,7 +35,7 @@ public class Plugin : BaseUnityPlugin
         // Initialize and apply Harmony patches
         harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.PatchAll(typeof(Plugin));
-        
+
         Logger.LogInfo("Harmony patches applied!");
 
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, "Whether upgrade items can spawn in levels");
@@ -47,7 +47,7 @@ public class Plugin : BaseUnityPlugin
         var possibleItems = StatsManager.instance.itemDictionary.Values.Where(item => item.itemType == itemType).ToList();
         if (possibleItems.Count == 0)
         {
-            Logger.LogWarning($"Failed to get random item of type {SemiFunc.itemType.item_upgrade}");
+            Logger.LogWarning($"Failed to get random item of type {itemType}");
             item = null;
             return false;
         }
@@ -71,7 +71,7 @@ public class Plugin : BaseUnityPlugin
                 return false;
         }
     }
-    
+
     [HarmonyPatch(typeof(ValuableDirector), "Spawn")]
     [HarmonyPrefix]
     public static bool ValuableDirector_Spawn_Prefix(ref GameObject _valuable, ValuableVolume _volume, string _path)
@@ -88,15 +88,15 @@ public class Plugin : BaseUnityPlugin
         // we override the valuable with the item
         _valuable = item.prefab;
 
-        // check if we are in multiplayer mode
-        if (GameManager.instance.gameMode != 0) {
+        if (SemiFunc.IsMultiplayer())
+        {
             // if we are in multiplayer mode, we have to handle the network spawn ourselves
             PhotonNetwork.Instantiate("Items/" + _valuable.name, _volume.transform.position, _volume.transform.rotation, 0);
-            Logger.LogInfo($"Highjacking Spawn for: {_valuable.name} with volume {_volume} at path {_path}");
+            Logger.LogInfo($"Highjacking Spawn for: {_valuable.name} with volume {_volume.name} at path {_path}");
             return false; // we do not want the original function to run, as we handled the spawn ourselves
         }
 
-        Logger.LogInfo($"ValuableDirector spawning: {_valuable.name} with volume {_volume} at path {_path}");
+        Logger.LogInfo($"ValuableDirector spawning: {_valuable.name} with volume {_volume.name} at path {_path}");
         return true;
     }
 }
