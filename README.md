@@ -40,6 +40,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.2.5**: Added support for [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) ui
 - **1.1.2**: Added configurable spawn rates for upgrade items
 - **1.0.0**: Initial release
 
