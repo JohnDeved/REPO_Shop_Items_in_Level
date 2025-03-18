@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>REPO_Shop_Items_in_Level</AssemblyName>
     <Product>Shop Items spawn in Level</Product>
-    <Version>1.0.2</Version>
+    <Version>1.1.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -43,6 +43,10 @@
     <!-- Clean the package directory -->
     <RemoveDir Directories="$(PackageDir)" />
     <MakeDir Directories="$(PackageDir)" />
+    
+    <!-- Update manifest version to match project version -->
+    <Exec Command="powershell -Command &quot;$manifest = Get-Content -Raw '$(ProjectDir)manifest.json' | ConvertFrom-Json; $manifest.version_number = '$(Version)'; $manifest | ConvertTo-Json | Set-Content -Path '$(ProjectDir)manifest.json'&quot;" />
+    <Message Text="Updated manifest.json version to $(Version)" Importance="high" />
     
     <!-- Copy files to the package directory -->
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageDir)" />
