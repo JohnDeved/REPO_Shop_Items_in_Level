@@ -8,8 +8,14 @@ Allows player upgrades to spawn naturally in levels instead of only being availa
 This mod modifies the game to add shop upgrade items to the pool of valuable items that can spawn in levels. Now you can find upgrades while exploring instead of only being able to purchase them.
 
 ## Features
-- Shop upgrades spawn in levels as tiny valuables
 - Only the Host needs to have the mod installed for it to work in multiplayer
+- Shop upgrades spawn in levels as tiny valuables
+- Configurable spawn chances
+
+## Configuration
+The following settings can be adjusted in the config file:
+- **SpawnUpgradeItems**: Enable or disable upgrade items spawning in levels (default: true)
+- **UpgradeItemSpawnChance**: Set the percentage chance (0-100) for an upgrade item to spawn (default: 5%)
 
 ## Dependencies
 - BepInEx-BepInExPack-5.4.2100
@@ -19,6 +25,7 @@ This mod modifies the game to add shop upgrade items to the pool of valuable ite
 - Upgrades sometimes spawn in unreachable places, such as inside objects.
 
 ## Version History
+- 1.1.2: Added configurable spawn rates for upgrade items
 - 1.0.0: Initial release
 
 ## Credits
