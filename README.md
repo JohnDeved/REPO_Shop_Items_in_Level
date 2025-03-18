@@ -20,6 +20,11 @@ Configure the mod through the BepInEx config file:
 | `SpawnUpgradeItems` | Enable/disable upgrade items spawning in levels | `true` |
 | `UpgradeItemSpawnChance` | Percentage chance (0-100) for upgrade items to spawn | `5%` |
 
+## 🔮 Planned Features
+- Support for additional item types
+- Custom item distributions based on level difficulty
+- Additional configuration options
+
 ## ⚠️ Known Issues
 - Currently only supports item upgrades (more item types coming in future updates)
 - Upgrades may occasionally spawn in hard-to-reach or inaccessible locations
@@ -28,12 +33,6 @@ Configure the mod through the BepInEx config file:
 ## 📝 Version History
 - **1.1.2**: Added configurable spawn rates for upgrade items
 - **1.0.0**: Initial release
-
-## 🔮 Planned Features
-- Support for additional item types
-- More granular spawn location control
-- Custom item distributions based on level difficulty
-- Additional configuration options
 
 ## 👤 Credits
 Created by JohnDeved (undefined)  
