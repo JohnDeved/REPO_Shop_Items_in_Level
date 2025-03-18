@@ -38,8 +38,9 @@ public class Plugin : BaseUnityPlugin
 
         Logger.LogInfo("Harmony patches applied!");
 
-        SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, "Whether upgrade items can spawn in levels");
-        UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 5f, "Percentage chance (0-100) for an upgrade item to spawn. Default is 5%.");
+        // Updated config entries with proper descriptions for config UI mod
+        SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
+        UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
