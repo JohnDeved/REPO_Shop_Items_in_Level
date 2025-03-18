@@ -2,13 +2,10 @@
 
 ![R E P O](https://github.com/user-attachments/assets/11f842b2-cf3f-4f8f-9df7-52eefbc8cdf7)
 
-> Discover valuable player upgrades naturally while exploring levels instead of only purchasing them from shops!
-
 ## ✨ Overview
 This mod enhances gameplay by allowing upgrade items (normally only available in shops) to spawn throughout levels as findable loot. Hunt for valuable upgrades as you explore!
 
 ## 🔑 Key Features
-- **Natural Upgrade Spawns**: Find player upgrades while exploring levels
 - **Multiplayer Friendly**: Only the host needs the mod installed
 - **Configurable**: Adjust spawn rates and toggle features to your preference
 
