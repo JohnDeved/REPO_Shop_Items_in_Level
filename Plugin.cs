@@ -9,7 +9,7 @@ using UnityEngine;
 using Photon.Pun;
 namespace REPO_Shop_Items_in_Level;
 
-public class SwitchPlayerUpgradeTracker: MonoBehaviour {}
+public class SwitchPlayerUpgradeTracker : MonoBehaviour { }
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("REPO.exe")]
@@ -59,6 +59,11 @@ public class Plugin : BaseUnityPlugin
         return true;
     }
 
+    private static bool HasValuablePropSwitch(ValuableVolume volume)
+    {
+        return volume.transform.GetComponentInParent<ValuablePropSwitch>() != null;
+    }
+
     private static bool ShouldReplaceValuable(ValuableVolume volume, out SemiFunc.itemType? itemType)
     {
         itemType = null;
@@ -77,19 +82,13 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-
-    private static bool HasValuablePropSwitch(ValuableVolume volume)
-    {
-        return volume.transform.GetComponentInParent<ValuablePropSwitch>() != null;
-    }
-
     [HarmonyPatch(typeof(ValuableDirector), "Spawn")]
     [HarmonyPrefix]
     public static bool ValuableDirector_Spawn_Prefix(ref GameObject _valuable, ValuableVolume _volume, string _path)
     {
-        // debug
-        // var field = typeof(EnemyDirector).GetField("debugNoVision", BindingFlags.NonPublic | BindingFlags.Instance);
-        // field.SetValue(EnemyDirector.instance, true);
+        // LevelGenerator.Instance.DebugNoEnemy = true;
+        var field = typeof(LevelGenerator).GetField("DebugNoEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
+        field.SetValue(LevelGenerator.Instance, true);
 
         // check if we should replace the valuable
         if (!ShouldReplaceValuable(_volume, out var itemType)) return true;
@@ -131,17 +130,17 @@ public class Plugin : BaseUnityPlugin
     // [HarmonyPatch(typeof(ValuablePropSwitch), nameof(ValuablePropSwitch.Setup))]
     // [HarmonyPostfix]
     public static void ValuablePropSwitch_Setup_Posfix(ValuablePropSwitch __instance)
-	{
+    {
         FieldInfo setupCompleteField = typeof(ValuablePropSwitch).GetField("SetupComplete", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         bool SetupComplete = (bool)setupCompleteField.GetValue(__instance);
         if (!SetupComplete) return;
 
-		var switchPlayerUpgradeComponent = __instance.gameObject.GetComponent<SwitchPlayerUpgradeTracker>();
-		if (!switchPlayerUpgradeComponent) return;
-		
+        var switchPlayerUpgradeComponent = __instance.gameObject.GetComponent<SwitchPlayerUpgradeTracker>();
+        if (!switchPlayerUpgradeComponent) return;
+
         __instance.PropParent.SetActive(value: false);
         __instance.ValuableParent.SetActive(value: true);
-        
+
         Logger.LogInfo($"ValuablePropSwitch found UpgradeTracker: {__instance.gameObject.name}");
-	}
+    }
 }
