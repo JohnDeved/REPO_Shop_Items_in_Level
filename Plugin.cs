@@ -9,7 +9,22 @@ using UnityEngine;
 using Photon.Pun;
 namespace REPO_Shop_Items_in_Level;
 
-public class SwitchPlayerUpgradeTracker : MonoBehaviour { }
+public class SwitchPlayerUpgradeTracker : MonoBehaviour {}
+
+// public class ShopItemsNetwork : MonoBehaviour {
+//     private PhotonView photonView;
+
+//     private void Awake()
+//     {
+//         photonView = GetComponent<PhotonView>();
+//     }
+
+//     [PunRPC]
+//     private void PlayerReadyShopItemsInLevel(string version, PhotonMessageInfo info)
+//     {
+//         print($"Player {photonView.Owner.NickName} ready with version: {version}");
+//     }
+// }
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("REPO.exe")]
@@ -43,6 +58,8 @@ public class Plugin : BaseUnityPlugin
         // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
         UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
+
+        // gameObject.AddComponent<ShopItemsNetwork>();
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
@@ -87,8 +104,8 @@ public class Plugin : BaseUnityPlugin
     public static bool ValuableDirector_Spawn_Prefix(ref GameObject _valuable, ValuableVolume _volume, string _path)
     {
         // LevelGenerator.Instance.DebugNoEnemy = true;
-        var field = typeof(LevelGenerator).GetField("DebugNoEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
-        field.SetValue(LevelGenerator.Instance, true);
+        // var field = typeof(LevelGenerator).GetField("DebugNoEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
+        // field.SetValue(LevelGenerator.Instance, true);
 
         // check if we should replace the valuable
         if (!ShouldReplaceValuable(_volume, out var itemType)) return true;
@@ -143,4 +160,24 @@ public class Plugin : BaseUnityPlugin
 
         Logger.LogInfo($"ValuablePropSwitch found UpgradeTracker: {__instance.gameObject.name}");
     }
+
+    // [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SetupClient))]
+    // [HarmonyPrefix]
+    // public static void ValuableDirector_SetupClient_Prefix(ValuableDirector __instance)
+    // {
+    //     Logger.LogInfo("ValuableDirector SetupClient called!");
+
+    //     var photonView = __instance.GetComponent<PhotonView>();
+    //     photonView.RPC("PlayerReadyShopItemsInLevel", RpcTarget.MasterClient, MyPluginInfo.PLUGIN_VERSION);
+    // }
+
+    // [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SetupHost))]
+    // [HarmonyPrefix]
+    // public static void ValuableDirector_SetupHost_Prefix(ValuableDirector __instance)
+    // {
+    //     Logger.LogInfo("ValuableDirector SetupHost called!");
+    
+    //     var photonView = __instance.GetComponent<PhotonView>();
+    //     photonView.RPC("PlayerReadyShopItemsInLevel", RpcTarget.MasterClient, MyPluginInfo.PLUGIN_VERSION);
+    // }
 }
