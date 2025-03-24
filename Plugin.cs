@@ -7,24 +7,10 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using Photon.Pun;
+using System.Collections;
 namespace REPO_Shop_Items_in_Level;
 
-public class SwitchPlayerUpgradeTracker : MonoBehaviour {}
-
-// public class ShopItemsNetwork : MonoBehaviour {
-//     private PhotonView photonView;
-
-//     private void Awake()
-//     {
-//         photonView = GetComponent<PhotonView>();
-//     }
-
-//     [PunRPC]
-//     private void PlayerReadyShopItemsInLevel(string version, PhotonMessageInfo info)
-//     {
-//         print($"Player {photonView.Owner.NickName} ready with version: {version}");
-//     }
-// }
+public class SwitchPlayerUpgradeTracker : MonoBehaviourPun { }
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("REPO.exe")]
@@ -58,8 +44,6 @@ public class Plugin : BaseUnityPlugin
         // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
         UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
-
-        // gameObject.AddComponent<ShopItemsNetwork>();
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
@@ -81,10 +65,21 @@ public class Plugin : BaseUnityPlugin
         return volume.transform.GetComponentInParent<ValuablePropSwitch>() != null;
     }
 
-    private static bool ShouldReplaceValuable(ValuableVolume volume, out SemiFunc.itemType? itemType)
+    private static bool DoAllPlayersHaveMod()
+    {
+        if (!SemiFunc.IsMultiplayer()) return true;
+        var players = PhotonNetwork.PlayerList;
+        var playersWithMod = players.Where(player => player.CustomProperties.ContainsKey("ShopItemsInLevel")).ToList();
+        return playersWithMod.Count == players.Length;
+    }
+
+    private static bool ShouldReplaceValuable(ValuableVolume volume, out SemiFunc.itemType? itemType, out bool hasSwitch)
     {
         itemType = null;
-        if (HasValuablePropSwitch(volume)) return false;
+        hasSwitch = HasValuablePropSwitch(volume);
+
+        // if volume has a switch, we only want to replace it if all players have the mod installed
+        if (hasSwitch && !DoAllPlayersHaveMod()) return false;
 
         switch (volume.VolumeType)
         {
@@ -108,7 +103,7 @@ public class Plugin : BaseUnityPlugin
         // field.SetValue(LevelGenerator.Instance, true);
 
         // check if we should replace the valuable
-        if (!ShouldReplaceValuable(_volume, out var itemType)) return true;
+        if (!ShouldReplaceValuable(_volume, out var itemType, out var hasSwitch)) return true;
 
         // check if itemType is null
         if (!itemType.HasValue) return true;
@@ -118,6 +113,11 @@ public class Plugin : BaseUnityPlugin
 
         // we override the valuable with the item
         _valuable = item.prefab;
+
+        if (hasSwitch)
+        {
+            AddSwitchTrackerComponent(_volume);
+        }
 
         if (SemiFunc.IsMultiplayer())
         {
@@ -143,9 +143,8 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    // dead code
-    // [HarmonyPatch(typeof(ValuablePropSwitch), nameof(ValuablePropSwitch.Setup))]
-    // [HarmonyPostfix]
+    [HarmonyPatch(typeof(ValuablePropSwitch), nameof(ValuablePropSwitch.Setup))]
+    [HarmonyPostfix]
     public static void ValuablePropSwitch_Setup_Posfix(ValuablePropSwitch __instance)
     {
         FieldInfo setupCompleteField = typeof(ValuablePropSwitch).GetField("SetupComplete", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -161,23 +160,12 @@ public class Plugin : BaseUnityPlugin
         Logger.LogInfo($"ValuablePropSwitch found UpgradeTracker: {__instance.gameObject.name}");
     }
 
-    // [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SetupClient))]
-    // [HarmonyPrefix]
-    // public static void ValuableDirector_SetupClient_Prefix(ValuableDirector __instance)
-    // {
-    //     Logger.LogInfo("ValuableDirector SetupClient called!");
-
-    //     var photonView = __instance.GetComponent<PhotonView>();
-    //     photonView.RPC("PlayerReadyShopItemsInLevel", RpcTarget.MasterClient, MyPluginInfo.PLUGIN_VERSION);
-    // }
-
-    // [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.SetupHost))]
-    // [HarmonyPrefix]
-    // public static void ValuableDirector_SetupHost_Prefix(ValuableDirector __instance)
-    // {
-    //     Logger.LogInfo("ValuableDirector SetupHost called!");
-    
-    //     var photonView = __instance.GetComponent<PhotonView>();
-    //     photonView.RPC("PlayerReadyShopItemsInLevel", RpcTarget.MasterClient, MyPluginInfo.PLUGIN_VERSION);
-    // }
+    [HarmonyPatch(typeof(NetworkManager), "Start")]
+    [HarmonyPostfix]
+    public static void NetworkManager_Start_Postfix()
+    {
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable() {
+            { "ShopItemsInLevel", MyPluginInfo.PLUGIN_VERSION }
+        });
+    }
 }
