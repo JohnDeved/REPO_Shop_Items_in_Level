@@ -26,8 +26,7 @@ To generate the configuration file, start the game with the mod installed at lea
 
 ## ⚠️ Known Issues
 - Currently only supports item upgrades (more item types coming in future updates)
-- Upgrades may occasionally spawn in hard-to-reach or inaccessible locations
-- Please report any other issues on the GitHub repository
+- Please report any other issues [here](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues)
 
 ## 🛠️ Troubleshooting
 
