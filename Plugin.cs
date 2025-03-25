@@ -10,7 +10,6 @@ using Photon.Pun;
 using System.Collections;
 namespace REPO_Shop_Items_in_Level;
 
-public class SwitchItemTracker : MonoBehaviour {}
 public class UsedVolumeTracker : MonoBehaviour {}
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
@@ -44,7 +43,7 @@ public class Plugin : BaseUnityPlugin
 
         // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
-        UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
+        UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
@@ -127,6 +126,7 @@ public class Plugin : BaseUnityPlugin
             .Where(volume => volume.VolumeType == ValuableVolume.Type.Tiny);
 
         Logger.LogInfo($"Found {volumes.Count()} potential volumes to spawn items in");
+        Logger.LogInfo($"Upgrade item spawn chance: {UpgradeItemSpawnChance.Value}%");
 
         int spawnedItems = 0;
         foreach (var volume in volumes)
