@@ -39,6 +39,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.4.6**: Added many new possible spawn locations and refactored spawn logic to be non-destructive (will not replace valuable items anymore)
 - **1.3.5**: Fixed issue where Upgrades would occasionally spawn in inaccessible locations
 - **1.2.5**: Added support for [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) ui
 - **1.1.2**: Added configurable spawn rates for upgrade items

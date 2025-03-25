@@ -10,7 +10,8 @@ using Photon.Pun;
 using System.Collections;
 namespace REPO_Shop_Items_in_Level;
 
-public class SwitchPlayerUpgradeTracker : MonoBehaviourPun { }
+public class SwitchItemTracker : MonoBehaviour {}
+public class UsedVolumeTracker : MonoBehaviour {}
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("REPO.exe")]
@@ -65,21 +66,11 @@ public class Plugin : BaseUnityPlugin
         return volume.transform.GetComponentInParent<ValuablePropSwitch>() != null;
     }
 
-    private static bool DoAllPlayersHaveMod()
-    {
-        if (!SemiFunc.IsMultiplayer()) return true;
-        var players = PhotonNetwork.PlayerList;
-        var playersWithMod = players.Where(player => player.CustomProperties.ContainsKey("ShopItemsInLevel")).ToList();
-        return playersWithMod.Count == players.Length;
-    }
-
-    private static bool ShouldReplaceValuable(ValuableVolume volume, out SemiFunc.itemType? itemType, out bool hasSwitch)
+    private static bool ShouldSpawnItem(ValuableVolume volume, out SemiFunc.itemType? itemType, out bool hasSwitch)
     {
         itemType = null;
         hasSwitch = HasValuablePropSwitch(volume);
-
-        // if volume has a switch, we only want to replace it if all players have the mod installed
-        if (hasSwitch && !DoAllPlayersHaveMod()) return false;
+        if (hasSwitch) return false; // sanity check - we do not support switches yet (sync issues)
 
         switch (volume.VolumeType)
         {
@@ -87,85 +78,62 @@ public class Plugin : BaseUnityPlugin
             case ValuableVolume.Type.Tiny:
                 if (!SpawnUpgradeItems.Value) return false;
                 itemType = SemiFunc.itemType.item_upgrade;
-                return Random.Range(0f, 100f) < UpgradeItemSpawnChance.Value;
+                return Random.Range(0f, 100f) <= UpgradeItemSpawnChance.Value;
 
             default:
                 return false;
         }
     }
 
-    [HarmonyPatch(typeof(ValuableDirector), "Spawn")]
-    [HarmonyPrefix]
-    public static bool ValuableDirector_Spawn_Prefix(ref GameObject _valuable, ValuableVolume _volume, string _path)
+    private static bool RandomItemSpawn(ValuableVolume volume)
     {
-        // LevelGenerator.Instance.DebugNoEnemy = true;
-        // var field = typeof(LevelGenerator).GetField("DebugNoEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
-        // field.SetValue(LevelGenerator.Instance, true);
-
         // check if we should replace the valuable
-        if (!ShouldReplaceValuable(_volume, out var itemType, out var hasSwitch)) return true;
+        if (!ShouldSpawnItem(volume, out var itemType, out var hasSwitch)) return false;
 
         // check if itemType is null
-        if (!itemType.HasValue) return true;
+        if (!itemType.HasValue) return false;
 
         // get a random item of the type
-        if (!GetRandomItemOfType(itemType.Value, out var item)) return true;
-
-        // we override the valuable with the item
-        _valuable = item.prefab;
-
-        if (hasSwitch)
-        {
-            AddSwitchTrackerComponent(_volume);
-        }
+        if (!GetRandomItemOfType(itemType.Value, out var item)) return false;
 
         if (SemiFunc.IsMultiplayer())
         {
-            // if we are in multiplayer mode, we have to handle the network spawn ourselves
-            PhotonNetwork.Instantiate("Items/" + _valuable.name, _volume.transform.position, _volume.transform.rotation, 0);
-            Logger.LogInfo($"Highjacking Spawn for: {_valuable.name} with volume {_volume.name} at path {_path}");
-            return false; // we do not want the original function to run, as we handled the spawn ourselves
+            PhotonNetwork.Instantiate("Items/" + item.name, volume.transform.position, volume.transform.rotation, 0);
+        } else {
+            Object.Instantiate(item.prefab, volume.transform.position, volume.transform.rotation);
         }
 
-        Logger.LogInfo($"ValuableDirector spawning: {_valuable.name} with volume {_volume.name} at path {_path}");
+        Logger.LogInfo($"Spawned {item.name} with volume {volume.name}");
         return true;
     }
 
-    // todo: check if all players have the mod installed so we can add the tracker component
-    private static void AddSwitchTrackerComponent(ValuableVolume volume)
+    [HarmonyPatch(typeof(ValuableDirector), "Spawn")]
+    [HarmonyPrefix]
+    public static void ValuableDirector_Spawn_Prefix(GameObject _valuable, ValuableVolume _volume, string _path)
     {
-        var switches = volume.transform.GetComponentsInParent<ValuablePropSwitch>(true);
+        _volume.gameObject.AddComponent<UsedVolumeTracker>();
+    }
 
-        foreach (var switchObj in switches)
+    [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.VolumesAndSwitchSetup))]
+    [HarmonyPostfix]
+    public static void ValuableDirector_SetupHost_Postfix(ValuableDirector __instance)
+    {
+        var volumes = Object.FindObjectsOfType<ValuableVolume>(includeInactive: false).ToList()
+            // only consider volumes that have not been used yet
+            .Where(volume => volume.gameObject.GetComponent<UsedVolumeTracker>() == null)
+            // only consider volumes that are not switches
+            .Where(volume => !HasValuablePropSwitch(volume))
+            // only consider tiny volumes for now
+            .Where(volume => volume.VolumeType == ValuableVolume.Type.Tiny);
+
+        Logger.LogInfo($"Found {volumes.Count()} potential volumes to spawn items in");
+
+        int spawnedItems = 0;
+        foreach (var volume in volumes)
         {
-            Logger.LogInfo($"Switch: {switchObj.gameObject.name}");
-            switchObj.gameObject.AddComponent<SwitchPlayerUpgradeTracker>();
+            if (RandomItemSpawn(volume)) spawnedItems++;
         }
-    }
 
-    [HarmonyPatch(typeof(ValuablePropSwitch), nameof(ValuablePropSwitch.Setup))]
-    [HarmonyPostfix]
-    public static void ValuablePropSwitch_Setup_Posfix(ValuablePropSwitch __instance)
-    {
-        FieldInfo setupCompleteField = typeof(ValuablePropSwitch).GetField("SetupComplete", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        bool SetupComplete = (bool)setupCompleteField.GetValue(__instance);
-        if (!SetupComplete) return;
-
-        var switchPlayerUpgradeComponent = __instance.gameObject.GetComponent<SwitchPlayerUpgradeTracker>();
-        if (!switchPlayerUpgradeComponent) return;
-
-        __instance.PropParent.SetActive(value: false);
-        __instance.ValuableParent.SetActive(value: true);
-
-        Logger.LogInfo($"ValuablePropSwitch found UpgradeTracker: {__instance.gameObject.name}");
-    }
-
-    [HarmonyPatch(typeof(NetworkManager), "Start")]
-    [HarmonyPostfix]
-    public static void NetworkManager_Start_Postfix()
-    {
-        PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable() {
-            { "ShopItemsInLevel", MyPluginInfo.PLUGIN_VERSION }
-        });
+        Logger.LogInfo($"Spawned {spawnedItems} items in total");
     }
 }
