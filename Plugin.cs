@@ -10,7 +10,7 @@ using Photon.Pun;
 using System.Collections;
 namespace REPO_Shop_Items_in_Level;
 
-public class UsedVolumeTracker : MonoBehaviour {}
+public class UsedVolumeTracker : MonoBehaviour { }
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("REPO.exe")]
@@ -19,6 +19,7 @@ public class Plugin : BaseUnityPlugin
     internal static new ManualLogSource Logger;
 
     internal static ConfigEntry<bool> SpawnUpgradeItems;
+    internal static ConfigEntry<bool> MapHideShopUpgradeItems;
     internal static ConfigEntry<float> UpgradeItemSpawnChance;
 
     private Harmony harmony;
@@ -43,6 +44,7 @@ public class Plugin : BaseUnityPlugin
 
         // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
+        MapHideShopUpgradeItems = Config.Bind("UpgradeItems", "MapHideShopUpgradeItems", true, new ConfigDescription("Whether upgrade items are hidden on the map"));
         UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
     }
 
@@ -98,7 +100,9 @@ public class Plugin : BaseUnityPlugin
         if (SemiFunc.IsMultiplayer())
         {
             PhotonNetwork.Instantiate("Items/" + item.name, volume.transform.position, volume.transform.rotation, 0);
-        } else {
+        }
+        else
+        {
             Object.Instantiate(item.prefab, volume.transform.position, volume.transform.rotation);
         }
 
@@ -117,6 +121,8 @@ public class Plugin : BaseUnityPlugin
     [HarmonyPostfix]
     public static void ValuableDirector_SetupHost_Postfix(ValuableDirector __instance)
     {
+        if (!SemiFunc.RunIsLevel()) return;
+
         var volumes = Object.FindObjectsOfType<ValuableVolume>(includeInactive: false).ToList()
             // only consider volumes that have not been used yet
             .Where(volume => volume.gameObject.GetComponent<UsedVolumeTracker>() == null)
@@ -135,5 +141,19 @@ public class Plugin : BaseUnityPlugin
         }
 
         Logger.LogInfo($"Spawned {spawnedItems} items in total");
+    }
+
+    [HarmonyPatch(typeof(Map), nameof(Map.AddCustom))]
+    [HarmonyPostfix]
+    public static void Map_AddCustom_Postfix(MapCustom mapCustom)
+    {
+        if (!SemiFunc.RunIsLevel()) return;
+
+        if (!mapCustom.gameObject.TryGetComponent<ItemAttributes>(out var itemAttributes)) return;
+
+        // exit if we are not hiding upgrade items
+        if (!MapHideShopUpgradeItems.Value && itemAttributes.item.itemType == SemiFunc.itemType.item_upgrade) return;
+
+        mapCustom.mapCustomEntity.gameObject.SetActive(false);
     }
 }
