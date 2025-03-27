@@ -54,7 +54,7 @@ public class Plugin : BaseUnityPlugin
         foreach (var item in StatsManager.instance.itemDictionary.Values)
         {
             if (item.itemType != SemiFunc.itemType.item_upgrade) continue; // only consider upgrade items for now
-            var configEntry = Instance.Config.Bind("AllowedItems", item.name, true, new ConfigDescription("Whether this item can spawn in levels"));
+            var configEntry = Instance.Config.Bind("AllowedItems Upgrades", item.name, true, new ConfigDescription("Whether this item can spawn in levels"));
             if (!configEntry.Value) blackListedItems.Add(configEntry);
         }
         return blackListedItems;
