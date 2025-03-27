@@ -15,7 +15,7 @@ Configure the mod through the BepInEx config file:
 | Setting | Description | Default |
 |---------|-------------|---------|
 | `SpawnUpgradeItems` | Enable/disable upgrade items spawning in levels | `true` |
-| `UpgradeItemSpawnChance` | Percentage chance (0-100) for upgrade items to spawn on a valid spawn point | `2.5%` |
+| `UpgradeItemSpawnChance` | Percentage chance (0-100) for upgrade items to spawn on a valid spawn point | `1%` |
 
 To generate the configuration file, start the game with the mod installed at least once. The configuration file will be generated in the `\BepInEx\config` directory and is named `REPO_Shop_Items_in_Level.cfg`. Note that the configuration file is only generated for mod versions 1.1.2 or higher.
 
@@ -39,6 +39,8 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.4.9**: implemented configs for item spawn allow list
+- **1.4.8**: implemented config for hiding items on the map
 - **1.4.6**: Added many new possible spawn locations and refactored spawn logic to be non-destructive (will not replace valuable items anymore)
 - **1.3.5**: Fixed issue where Upgrades would occasionally spawn in inaccessible locations
 - **1.2.5**: Added support for [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) ui

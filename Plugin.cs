@@ -45,12 +45,38 @@ public class Plugin : BaseUnityPlugin
         // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
         MapHideShopUpgradeItems = Config.Bind("UpgradeItems", "MapHideShopUpgradeItems", true, new ConfigDescription("Whether upgrade items are hidden on the map"));
-        UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0f, 100f)));
+        UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
+    }
+
+    private static List<ConfigEntry<bool>> GetDisallowedItems()
+    {
+        var blackListedItems = new List<ConfigEntry<bool>>();
+        foreach (var item in StatsManager.instance.itemDictionary.Values)
+        {
+            if (item.itemType != SemiFunc.itemType.item_upgrade) continue; // only consider upgrade items for now
+            var configEntry = Instance.Config.Bind("AllowedItems", item.name, true, new ConfigDescription("Whether this item can spawn in levels"));
+            if (!configEntry.Value) blackListedItems.Add(configEntry);
+        }
+        return blackListedItems;
+    }
+
+    [HarmonyPatch(typeof(StatsManager), "LoadItemsFromFolder")]
+    [HarmonyPostfix]
+    public static void StatsManager_LoadItemsFromFolder_Postfix(StatsManager __instance)
+    {
+        GetDisallowedItems(); // initialize the config entries
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
     {
-        var possibleItems = StatsManager.instance.itemDictionary.Values.Where(item => item.itemType == itemType).ToList();
+        var blackListedItems = GetDisallowedItems();
+        var possibleItems = StatsManager.instance.itemDictionary.Values
+            // only consider items of the given type
+            .Where(item => item.itemType == itemType)
+            // only consider items that are not blacklisted
+            .Where(item => !blackListedItems.Any(configEntry => configEntry.Definition.Key == item.name && !configEntry.Value))
+            .ToList();
+
         if (possibleItems.Count == 0)
         {
             Logger.LogWarning($"Failed to get random item of type {itemType}");
