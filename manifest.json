@@ -1,6 +1,6 @@
 {
     "name":  "Shop_Items_Spawn_in_Level",
-    "description":  "Player Upgrades may spawn in the Level, now you can find upgrades while exploring instead of only being able to purchase them.",
+    "description":  "upgrade items may spawn in the level, now you can find upgrades while exploring instead of only being able to purchase them.",
     "version_number":  "1.5.13",
     "dependencies":  [
                          "BepInEx-BepInExPack-5.4.2100"
