@@ -16,10 +16,12 @@ Configure the mod through the BepInEx config file:
 |---------|-------------|---------|
 | `SpawnUpgradeItems` | Enable/disable upgrade items spawning in levels | `true` |
 | `MapHideShopUpgradeItems` | Whether upgrade items are hidden on the map | `true` |
-| `UpgradeItemSpawnChance` | Percentage chance (0-100) for upgrade items to spawn on a valid spawn point | `1%` |
+| `UpgradeItemSpawnChance` | Percentage chance (0-100) for upgrade items to spawn on a valid spawn point | `2.5%` |
 
 ## 📜 Item Allow List
 The mod supports controlling which specific upgrade items can spawn in levels. In the config file, under the `[AllowedItems]` section, you'll find a list of all available items (including modded items) that could possibly spawn. Each item has its own toggle to enable or disable spawning.
+
+Please note that you have to start the game with the mod installed at least once to generate the configuration options.
 
 ## 🔮 Planned Features
 - Support for additional item types
