@@ -48,7 +48,6 @@ public class Plugin : BaseUnityPlugin
 
         Logger.LogInfo("Harmony patches applied!");
 
-        // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
         MapHideUpgradeItems = Config.Bind("UpgradeItems", "MapHideShopUpgradeItems", true, new ConfigDescription("(Client) Whether upgrade items are hidden on the map"));
         UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
@@ -62,7 +61,7 @@ public class Plugin : BaseUnityPlugin
     // changed to mainmenu load because of modded items
     [HarmonyPatch(typeof(MainMenuOpen), "Awake")]
     [HarmonyPostfix]
-    public static void StatsManager_LoadItemsFromFolder_Postfix(StatsManager __instance)
+    public static void MainMenuOpen_Awake_Postfix(StatsManager __instance)
     {
         if (DisallowedItems != null) return;
         Logger.LogInfo("Initializing disallowed items list");
@@ -171,7 +170,7 @@ public class Plugin : BaseUnityPlugin
 
     [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.VolumesAndSwitchSetup))]
     [HarmonyPostfix]
-    public static void ValuableDirector_SetupHost_Postfix(ValuableDirector __instance)
+    public static void ValuableDirector_VolumesAndSwitchSetup_Postfix(ValuableDirector __instance)
     {
         if (!SemiFunc.RunIsLevel()) return;
 
