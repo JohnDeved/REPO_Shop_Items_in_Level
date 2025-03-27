@@ -19,8 +19,14 @@ public class Plugin : BaseUnityPlugin
     internal static new ManualLogSource Logger;
 
     internal static ConfigEntry<bool> SpawnUpgradeItems;
-    internal static ConfigEntry<bool> MapHideShopUpgradeItems;
+    internal static ConfigEntry<bool> MapHideUpgradeItems;
     internal static ConfigEntry<float> UpgradeItemSpawnChance;
+
+    internal static ConfigEntry<bool> SpawnDroneItems;
+    internal static ConfigEntry<bool> MapHideDroneItems;
+    internal static ConfigEntry<float> DroneItemSpawnChance;
+
+    internal static List<ConfigEntry<bool>> DisallowedItems;
 
     private Harmony harmony;
 
@@ -44,37 +50,52 @@ public class Plugin : BaseUnityPlugin
 
         // Updated config entries with proper descriptions for config UI mod
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
-        MapHideShopUpgradeItems = Config.Bind("UpgradeItems", "MapHideShopUpgradeItems", true, new ConfigDescription("(Client) Whether upgrade items are hidden on the map"));
+        MapHideUpgradeItems = Config.Bind("UpgradeItems", "MapHideShopUpgradeItems", true, new ConfigDescription("(Client) Whether upgrade items are hidden on the map"));
         UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
+        
+        SpawnDroneItems = Config.Bind("DroneItems", "SpawnDroneItems", true, new ConfigDescription("Whether drone items can spawn in levels"));
+        MapHideDroneItems = Config.Bind("DroneItems", "MapHideDroneItems", true, new ConfigDescription("(Client) Whether drone items are hidden on the map"));
+        DroneItemSpawnChance = Config.Bind("DroneItems", "DroneItemsSpawnChance", 0.95f, new ConfigDescription("% chance for a drone item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
     }
 
-    private static List<ConfigEntry<bool>> GetDisallowedItems()
-    {
-        var blackListedItems = new List<ConfigEntry<bool>>();
-        foreach (var item in StatsManager.instance.itemDictionary.Values)
-        {
-            if (item.itemType != SemiFunc.itemType.item_upgrade) continue; // only consider upgrade items for now
-            var configEntry = Instance.Config.Bind("AllowedItems Upgrades", item.name, true, new ConfigDescription("Whether this item can spawn in levels"));
-            if (!configEntry.Value) blackListedItems.Add(configEntry);
-        }
-        return blackListedItems;
-    }
-
-    [HarmonyPatch(typeof(StatsManager), "LoadItemsFromFolder")]
+    // [HarmonyPatch(typeof(StatsManager), "LoadItemsFromFolder")]
+    // changed to mainmenu load because of modded items
+    [HarmonyPatch(typeof(MainMenuOpen), "Awake")]
     [HarmonyPostfix]
     public static void StatsManager_LoadItemsFromFolder_Postfix(StatsManager __instance)
     {
-        GetDisallowedItems(); // initialize the config entries
+        if (DisallowedItems != null) return;
+        Logger.LogInfo("Initializing disallowed items list");
+        DisallowedItems = new List<ConfigEntry<bool>>();
+        foreach (var item in StatsManager.instance.itemDictionary.Values)
+        {
+            ConfigEntry<bool> configEntry;
+            switch (item.itemType)
+            {
+                case SemiFunc.itemType.item_upgrade:
+                    // check if config entry already exists
+                    configEntry = Instance.Config.Bind("AllowedItems Upgrades", item.name, true, 
+                        new ConfigDescription("Whether this upgrade item can spawn in levels"));
+                    break;
+                case SemiFunc.itemType.drone:
+                    configEntry = Instance.Config.Bind("AllowedItems Drones", item.name, true, 
+                        new ConfigDescription("Whether this drone item can spawn in levels"));
+                    break;
+                default:
+                    continue; // Skip other item types
+            }
+            
+            if (!configEntry.Value) DisallowedItems.Add(configEntry);
+        }
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
     {
-        var blackListedItems = GetDisallowedItems();
         var possibleItems = StatsManager.instance.itemDictionary.Values
             // only consider items of the given type
             .Where(item => item.itemType == itemType)
             // only consider items that are not blacklisted
-            .Where(item => !blackListedItems.Any(configEntry => configEntry.Definition.Key == item.name && !configEntry.Value))
+            .Where(item => !DisallowedItems.Any(configEntry => configEntry.Definition.Key == item.name && !configEntry.Value))
             .ToList();
 
         if (possibleItems.Count == 0)
@@ -106,6 +127,11 @@ public class Plugin : BaseUnityPlugin
                 if (!SpawnUpgradeItems.Value) return false;
                 itemType = SemiFunc.itemType.item_upgrade;
                 return Random.Range(0f, 100f) <= UpgradeItemSpawnChance.Value;
+
+            case ValuableVolume.Type.Small:
+                if (!SpawnDroneItems.Value) return false;
+                itemType = SemiFunc.itemType.drone;
+                return Random.Range(0f, 100f) <= DroneItemSpawnChance.Value;
 
             default:
                 return false;
@@ -153,12 +179,11 @@ public class Plugin : BaseUnityPlugin
             // only consider volumes that have not been used yet
             .Where(volume => volume.gameObject.GetComponent<UsedVolumeTracker>() == null)
             // only consider volumes that are not switches
-            .Where(volume => !HasValuablePropSwitch(volume))
-            // only consider tiny volumes for now
-            .Where(volume => volume.VolumeType == ValuableVolume.Type.Tiny);
+            .Where(volume => !HasValuablePropSwitch(volume));
 
         Logger.LogInfo($"Found {volumes.Count()} potential volumes to spawn items in");
-        Logger.LogInfo($"Upgrade item spawn chance: {UpgradeItemSpawnChance.Value}%");
+        Logger.LogInfo($"Upgrade item spawn chance: {UpgradeItemSpawnChance.Value}% on {volumes.Where(volume => volume.VolumeType == ValuableVolume.Type.Tiny).Count()} tiny volumes");
+        Logger.LogInfo($"Drone item spawn chance: {DroneItemSpawnChance.Value}% on {volumes.Where(volume => volume.VolumeType == ValuableVolume.Type.Small).Count()} small volumes");
 
         int spawnedItems = 0;
         foreach (var volume in volumes)
@@ -178,7 +203,9 @@ public class Plugin : BaseUnityPlugin
         if (!mapCustom.gameObject.TryGetComponent<ItemAttributes>(out var itemAttributes)) return;
 
         // exit if we are not hiding upgrade items
-        if (!MapHideShopUpgradeItems.Value && itemAttributes.item.itemType == SemiFunc.itemType.item_upgrade) return;
+        if (!MapHideUpgradeItems.Value && itemAttributes.item.itemType == SemiFunc.itemType.item_upgrade) return;
+        // exit if we are not hiding drone items
+        if (!MapHideDroneItems.Value && itemAttributes.item.itemType == SemiFunc.itemType.drone) return;
 
         mapCustom.mapCustomEntity.gameObject.SetActive(false);
     }
