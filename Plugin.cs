@@ -201,11 +201,13 @@ public class Plugin : BaseUnityPlugin
 
         if (!mapCustom.gameObject.TryGetComponent<ItemAttributes>(out var itemAttributes)) return;
 
-        // exit if we are not hiding upgrade items
-        if (!MapHideUpgradeItems.Value && itemAttributes.item.itemType == SemiFunc.itemType.item_upgrade) return;
-        // exit if we are not hiding drone items
-        if (!MapHideDroneItems.Value && itemAttributes.item.itemType == SemiFunc.itemType.drone) return;
-
-        mapCustom.mapCustomEntity.gameObject.SetActive(false);
+        // Only hide map entities for specific item types if configured
+        switch (itemAttributes.item.itemType)
+        {
+            case SemiFunc.itemType.item_upgrade when MapHideUpgradeItems.Value:
+            case SemiFunc.itemType.drone when MapHideDroneItems.Value:
+                mapCustom.mapCustomEntity.gameObject.SetActive(false);
+                break;
+        }
     }
 }

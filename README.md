@@ -55,6 +55,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.5.15**: fixed bug where cart would not show up in the map anymore
 - **1.5.13**: implemented support for drone items
 - **1.4.9**: implemented configs for item spawn allow list (supports modded items aswell)
 - **1.4.8**: implemented config for hiding items on the map
