@@ -18,6 +18,7 @@ Configure the mod through the BepInEx config file:
 | `SpawnUpgradeItems` | Enable/disable upgrade items spawning in levels | `true` |
 | `MapHideShopUpgradeItems` | Whether upgrade items are hidden on the map (Client Only) | `true` |
 | `UpgradeItemSpawnChance` | Percentage chance (0-100) for upgrade items to spawn on a valid spawn point | `2.5%` |
+| `UseShopPriceForItemSelection` | If ON: Cheaper upgrade items appear more often. If OFF: All upgrade items have equal chance | `true` |
 
 ### Drone Items
 | Setting | Description | Default |
@@ -25,6 +26,7 @@ Configure the mod through the BepInEx config file:
 | `SpawnDroneItems` | Enable/disable drone items spawning in levels | `true` |
 | `MapHideDroneItems` | Whether drone items are hidden on the map (Client Only) | `true` |
 | `DroneItemsSpawnChance` | Percentage chance (0-100) for drone items to spawn on a valid spawn point | `0.95%` |
+| `UseShopPriceForItemSelection` | If ON: Cheaper drone items appear more often. If OFF: All drone items have equal chance | `true` |
 
 ### Item Allow List
 The mod supports controlling which specific upgrade items can spawn in levels. In the config file, you'll find two sections:
@@ -55,6 +57,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.6.15**: Added per-item-type configuration for item selection method (shop price-based or equal chance)
 - **1.5.15**: fixed bug where cart would not show up in the map anymore
 - **1.5.13**: implemented support for drone items
 - **1.4.9**: implemented configs for item spawn allow list (supports modded items aswell)

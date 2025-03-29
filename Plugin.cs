@@ -21,10 +21,12 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<bool> SpawnUpgradeItems;
     internal static ConfigEntry<bool> MapHideUpgradeItems;
     internal static ConfigEntry<float> UpgradeItemSpawnChance;
+    internal static ConfigEntry<bool> UseShopPriceForUpgradeItems;
 
     internal static ConfigEntry<bool> SpawnDroneItems;
     internal static ConfigEntry<bool> MapHideDroneItems;
     internal static ConfigEntry<float> DroneItemSpawnChance;
+    internal static ConfigEntry<bool> UseShopPriceForDroneItems;
 
     internal static List<ConfigEntry<bool>> DisallowedItems;
 
@@ -51,10 +53,12 @@ public class Plugin : BaseUnityPlugin
         SpawnUpgradeItems = Config.Bind("UpgradeItems", "SpawnUpgradeItems", true, new ConfigDescription("Whether upgrade items can spawn in levels"));
         MapHideUpgradeItems = Config.Bind("UpgradeItems", "MapHideShopUpgradeItems", true, new ConfigDescription("(Client) Whether upgrade items are hidden on the map"));
         UpgradeItemSpawnChance = Config.Bind("UpgradeItems", "UpgradeItemSpawnChance", 2.5f, new ConfigDescription("% chance for an upgrade item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
-        
+        UseShopPriceForUpgradeItems = Config.Bind("UpgradeItems", "UseShopPriceForItemSelection", true, new ConfigDescription("If ON: Cheaper upgrade items appear more often. If OFF: All upgrade items have equal chance."));
+
         SpawnDroneItems = Config.Bind("DroneItems", "SpawnDroneItems", true, new ConfigDescription("Whether drone items can spawn in levels"));
         MapHideDroneItems = Config.Bind("DroneItems", "MapHideDroneItems", true, new ConfigDescription("(Client) Whether drone items are hidden on the map"));
         DroneItemSpawnChance = Config.Bind("DroneItems", "DroneItemsSpawnChance", 0.95f, new ConfigDescription("% chance for a drone item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
+        UseShopPriceForDroneItems = Config.Bind("DroneItems", "UseShopPriceForItemSelection", true, new ConfigDescription("If ON: Cheaper drone items appear more often. If OFF: All drone items have equal chance."));
     }
 
     // [HarmonyPatch(typeof(StatsManager), "LoadItemsFromFolder")]
@@ -73,39 +77,104 @@ public class Plugin : BaseUnityPlugin
             {
                 case SemiFunc.itemType.item_upgrade:
                     // check if config entry already exists
-                    configEntry = Instance.Config.Bind("AllowedItems Upgrades", item.name, true, 
+                    configEntry = Instance.Config.Bind("AllowedItems Upgrades", item.name, true,
                         new ConfigDescription("Whether this upgrade item can spawn in levels"));
                     break;
                 case SemiFunc.itemType.drone:
-                    configEntry = Instance.Config.Bind("AllowedItems Drones", item.name, true, 
+                    configEntry = Instance.Config.Bind("AllowedItems Drones", item.name, true,
                         new ConfigDescription("Whether this drone item can spawn in levels"));
                     break;
                 default:
                     continue; // Skip other item types
             }
-            
+
             if (!configEntry.Value) DisallowedItems.Add(configEntry);
         }
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
     {
+        item = null;
+
+        // --- 1. Filter Candidate Items ---
         var possibleItems = StatsManager.instance.itemDictionary.Values
-            // only consider items of the given type
-            .Where(item => item.itemType == itemType)
-            // only consider items that are not blacklisted
-            .Where(item => !DisallowedItems.Any(configEntry => configEntry.Definition.Key == item.name && !configEntry.Value))
+            .Where(i => i.itemType == itemType) // Type check
+            .Where(i => i.value != null && i.value.valueMin > 0f) // Validity & Value check
+            .Where(i => !DisallowedItems.Any(cfg => cfg.Definition.Key == i.name && !cfg.Value)) // Blacklist
             .ToList();
 
+        // --- 2. Handle No Valid Items Found ---
         if (possibleItems.Count == 0)
         {
-            Logger.LogWarning($"Failed to get random item of type {itemType}");
-            item = null;
+            Logger.LogWarning($"GetRandomItemOfType: No valid items found for type {itemType} after filtering.");
             return false;
         }
 
-        item = possibleItems[Random.Range(0, possibleItems.Count)];
-        return true;
+        bool useWeightedSelection = false;
+        
+        // Determine which weighted selection setting to use based on item type
+        switch(itemType)
+        {
+            case SemiFunc.itemType.item_upgrade:
+                useWeightedSelection = UseShopPriceForUpgradeItems.Value;
+                break;
+            case SemiFunc.itemType.drone:
+                useWeightedSelection = UseShopPriceForDroneItems.Value;
+                break;
+        }
+
+        if (useWeightedSelection)
+        {
+            // --- Weighted Selection based on shop price ---
+            
+            // --- 3. Calculate Total Weight ---
+            float totalWeight = possibleItems.Sum(i => 1.0f / i.value.valueMin);
+
+            // --- 4. Handle Invalid Total Weight (Edge Case) ---
+            if (totalWeight <= 0f || float.IsNaN(totalWeight) || float.IsInfinity(totalWeight))
+            {
+                Logger.LogWarning($"GetRandomItemOfType: Invalid total weight {totalWeight} for type {itemType}. " +
+                                  "This may indicate an issue with item values or weights.");
+                return false;
+            }
+
+            // --- 5. Perform Weighted Random Selection ---
+            float randomRoll = Random.Range(0f, totalWeight);
+
+            foreach (var currentItem in possibleItems)
+            {
+                float itemWeight = 1.0f / currentItem.value.valueMin;
+                randomRoll -= itemWeight;
+
+                if (randomRoll <= 0f)
+                {
+                    item = currentItem;
+                    break;
+                }
+            }
+
+            // --- 6. Handle Float Precision (Edge Case) ---
+            if (item == null)
+            {
+                Logger.LogWarning($"GetRandomItemOfType: Weighted selection loop for type {itemType} completed unexpectedly " +
+                                  "without selecting an item. This may indicate a precision issue.");
+                return false;
+            }
+
+            // Calculate the probability for the selected item
+            // Probability = (Item's Weight) / (Total Weight)
+            float itemChancePercent = (1.0f / item.value.valueMin) / totalWeight * 100.0f;
+            Logger.LogInfo($"Selecting {item.name} at a chance of {itemChancePercent:F2}% compared to others of type {itemType} (based on shop price)");
+        }
+        else
+        {
+            // --- Equal chance for all items ---
+            int randomIndex = Random.Range(0, possibleItems.Count);
+            item = possibleItems[randomIndex];
+            Logger.LogInfo($"Selecting {item.name} at a chance of {100.0f / possibleItems.Count:F2}% compared to others of type {itemType} (equal chance)");
+        }
+
+        return true; // Successfully selected an item
     }
 
     private static bool HasValuablePropSwitch(ValuableVolume volume)
@@ -157,7 +226,6 @@ public class Plugin : BaseUnityPlugin
             Object.Instantiate(item.prefab, volume.transform.position, volume.transform.rotation);
         }
 
-        Logger.LogInfo($"Spawned {item.name} with volume {volume.name}");
         return true;
     }
 
