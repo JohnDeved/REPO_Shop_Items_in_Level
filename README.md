@@ -5,6 +5,10 @@
 ## ✨ Overview
 This mod enhances gameplay by allowing upgrade items and drones (normally only available in shops) to spawn throughout levels as findable loot. Hunt for valuable upgrade items as you explore!
 
+If you want to bring Items (Upraged or Drones) you found in the level with you to the next level, simply bring them to an extraction point, they will be sucked in and wait for you in the Intermission Level.
+![image](https://github.com/user-attachments/assets/6a612b10-398c-45fe-b5bb-c5261456531e)
+
+
 ## 🔑 Key Features
 - **Multiplayer Friendly**: Only the host needs the mod installed
 - **Configurable**: Adjust spawn rates and toggle features to your preference
