@@ -17,7 +17,7 @@ Found a valuable upgrade or drone during your run? Bring it to any extraction po
 Configure the mod through the BepInEx config file.
 It is recommended to use the [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) UI for easier configuration in-game.
 
-![image](https://github.com/user-attachments/assets/8cf2b6a5-e2b0-4396-ab30-9df6ba8fb6fc)
+![image](https://github.com/user-attachments/assets/75043405-666a-404f-ab73-e073d63ff673)
 
 ### Upgrade Items
 | Setting | Description | Default |
