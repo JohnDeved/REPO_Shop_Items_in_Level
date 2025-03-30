@@ -11,6 +11,7 @@ using System.Collections;
 namespace REPO_Shop_Items_in_Level;
 
 public class UsedVolumeTracker : MonoBehaviour { }
+public class SpawnedItemTracker : MonoBehaviour { }
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("REPO.exe")]
@@ -47,6 +48,7 @@ public class Plugin : BaseUnityPlugin
         // Initialize and apply Harmony patches
         harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.PatchAll(typeof(Plugin));
+        // harmony.PatchAll(typeof(DespawnPatch));
 
         Logger.LogInfo("Harmony patches applied!");
 
@@ -111,9 +113,9 @@ public class Plugin : BaseUnityPlugin
         }
 
         bool useWeightedSelection = false;
-        
+
         // Determine which weighted selection setting to use based on item type
-        switch(itemType)
+        switch (itemType)
         {
             case SemiFunc.itemType.item_upgrade:
                 useWeightedSelection = UseShopPriceForUpgradeItems.Value;
@@ -126,7 +128,7 @@ public class Plugin : BaseUnityPlugin
         if (useWeightedSelection)
         {
             // --- Weighted Selection based on shop price ---
-            
+
             // --- 3. Calculate Total Weight ---
             float totalWeight = possibleItems.Sum(i => 1.0f / i.value.valueMin);
 
@@ -206,6 +208,24 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
+    private static GameObject SpawnItem(Item item, Vector3 position, Quaternion rotation)
+    {
+        GameObject spawnedObj;
+        
+        if (SemiFunc.IsMultiplayer())
+        {
+            spawnedObj = PhotonNetwork.Instantiate("Items/" + item.name, position, rotation, 0);
+        }
+        else
+        {
+            spawnedObj = Object.Instantiate(item.prefab, position, rotation);
+        }
+        
+        // Add tracker component to the spawned item
+        spawnedObj.AddComponent<SpawnedItemTracker>();
+        return spawnedObj;
+    }
+
     private static bool RandomItemSpawn(ValuableVolume volume)
     {
         // check if we should replace the valuable
@@ -217,17 +237,66 @@ public class Plugin : BaseUnityPlugin
         // get a random item of the type
         if (!GetRandomItemOfType(itemType.Value, out var item)) return false;
 
-        if (SemiFunc.IsMultiplayer())
-        {
-            PhotonNetwork.Instantiate("Items/" + item.name, volume.transform.position, volume.transform.rotation, 0);
-        }
-        else
-        {
-            Object.Instantiate(item.prefab, volume.transform.position, volume.transform.rotation);
-        }
+        SpawnItem(item, volume.transform.position, volume.transform.rotation);
 
         return true;
     }
+
+    // [HarmonyPatch(typeof(EnemyParent), "Despawn")]
+    // class DespawnPatch
+    // {
+    //     static int GetEnemySpawnValuableCurrent(EnemyParent enemyParent)
+    //     {
+    //         // Access Enemy
+    //         var enemy = AccessTools.Field(typeof(EnemyParent), "Enemy")?.GetValue(enemyParent) as Enemy;
+    //         if (enemy == null)
+    //         {
+    //             Logger.LogWarning($"Failed to access Enemy from EnemyParent {enemyParent.name}.");
+    //             return 0;
+    //         }
+
+    //         // Access Health
+    //         var health = AccessTools.Field(typeof(Enemy), "Health")?.GetValue(enemy) as EnemyHealth;
+    //         if (health == null)
+    //         {
+    //             Logger.LogWarning($"Failed to access Health from Enemy {enemyParent.name}.");
+    //             return 0;
+    //         }
+
+    //         // Access spawnValuableCurrent
+    //         var spawnValuableField = AccessTools.Field(typeof(EnemyHealth), "spawnValuableCurrent");
+    //         if (spawnValuableField == null)
+    //         {
+    //             Logger.LogWarning($"Field spawnValuableCurrent not found in EnemyHealth for enemy {enemyParent.name}.");
+    //             return 0;
+    //         }
+
+    //         return (int)spawnValuableField.GetValue(health);
+    //     }
+
+    //     // Store valuable count before method execution
+    //     static void Prefix(EnemyParent __instance, out int __state)
+    //     {
+    //         __state = GetEnemySpawnValuableCurrent(__instance);
+    //     }
+
+    //     // Check if valuable count increased after method execution
+    //     static void Postfix(EnemyParent __instance, int __state)
+    //     {
+    //         if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
+    //         // If valuable spawned (count increased), spawn our additional item
+    //         if (GetEnemySpawnValuableCurrent(__instance) > __state)
+    //         {
+    //             Logger.LogInfo($"Enemy {__instance.name} spawned a valuable!");
+    //             if (GetRandomItemOfType(SemiFunc.itemType.healthPack, out var item)) {
+    //                 // Spawn the item at the enemy's position
+    //                 var position = __instance.transform.position + new Vector3(0, 1, 0);
+    //                 var rotation = Quaternion.identity;
+    //                 SpawnItem(item, position, rotation);
+    //             }
+    //         }
+    //     }
+    // }
 
     [HarmonyPatch(typeof(ValuableDirector), "Spawn")]
     [HarmonyPrefix]
@@ -276,6 +345,33 @@ public class Plugin : BaseUnityPlugin
             case SemiFunc.itemType.drone when MapHideDroneItems.Value:
                 mapCustom.mapCustomEntity.gameObject.SetActive(false);
                 break;
+        }
+    }
+
+    [HarmonyPatch(typeof(ExtractionPoint), "DestroyAllPhysObjectsInHaulList")]
+    [HarmonyPostfix]
+    public static void ExtractionPoint_DestroyAllPhysObjectsInHaulList_Postfix(ExtractionPoint __instance)
+    {
+        if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
+
+        // get all spawned items
+        var spawnedItemGameObjects = Object.FindObjectsOfType<SpawnedItemTracker>(includeInactive: false)
+            .Select(tracker => tracker.gameObject)
+            .ToList();
+
+        foreach (var gameObject in spawnedItemGameObjects)
+        {
+            var roomVolumeCheck = gameObject.GetComponent<RoomVolumeCheck>();
+            if (roomVolumeCheck == null) continue;
+            if (roomVolumeCheck.CurrentRooms.Any(room => room.Extraction)) {
+                var itemAttr = gameObject.GetComponent<ItemAttributes>();
+
+                Logger.LogInfo($"Adding item {gameObject.name} to purchased items");
+                StatsManager.instance.ItemPurchase(itemAttr.item.itemAssetName);
+
+                Logger.LogInfo($"Destroying spawned item {gameObject.name} in extraction point {__instance.name}");
+                gameObject.GetComponent<PhysGrabObject>().DestroyPhysGrabObject();
+            }
         }
     }
 }
