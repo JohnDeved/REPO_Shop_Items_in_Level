@@ -5,16 +5,17 @@
 ## ✨ Overview
 This mod enhances gameplay by allowing upgrade items and drones (normally only available in shops) to spawn throughout levels as findable loot. Hunt for valuable upgrade items as you explore!
 
-If you want to bring Items (Upraged or Drones) you found in the level with you to the next level, simply bring them to an extraction point, they will be sucked in and wait for you in the Intermission Level.
+## 🕹️ Multiplayer Friendly
+This mod is designed to work seamlessly in multiplayer. Only the host needs to have the mod installed for all players to benefit from the new Features that it brings. This means you can enjoy the excitement of finding upgrade items and drones together with your friends, without requiring everyone to install the mod.
+
+## 📦 Extraction Point Integration
+Found a valuable upgrade or drone during your run? Bring it to any extraction point, and it will be automatically added to your inventory! The item will be waiting for you in the Lobby Level to use in your next run.
+
 ![image](https://github.com/user-attachments/assets/6a612b10-398c-45fe-b5bb-c5261456531e)
 
-
-## 🔑 Key Features
-- **Multiplayer Friendly**: Only the host needs the mod installed
-- **Configurable**: Adjust spawn rates and toggle features to your preference
-
 ## ⚙️ Configuration
-Configure the mod through the BepInEx config file:
+Configure the mod through the BepInEx config file.
+It is recommended to use the [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) UI for easier configuration in-game.
 
 ### Upgrade Items
 | Setting | Description | Default |
@@ -50,7 +51,7 @@ Please note that you have to start the game with the mod installed at least once
 - Currently only supports item upgrades and drones (more item types coming in future updates)
 - Please report any issues [here](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues)
 
-## 🛠️ Troubleshooting
+## ❓ Troubleshooting
 
 ### [No config file](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues/7)
 If you do not see the configuration file, follow these steps:
@@ -61,6 +62,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.7.15**: Added extraction point integration - items are now properly processed and saved when brought to extraction points within the level
 - **1.6.15**: Added per-item-type configuration for item selection method (shop price-based or equal chance)
 - **1.5.15**: fixed bug where cart would not show up in the map anymore
 - **1.5.13**: implemented support for drone items
