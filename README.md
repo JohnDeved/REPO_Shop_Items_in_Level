@@ -6,7 +6,7 @@
 This mod enhances gameplay by allowing upgrade items and drones (normally only available in shops) to spawn throughout levels as findable loot. Hunt for valuable upgrade items as you explore!
 
 ## 🕹️ Multiplayer Friendly
-This mod is designed to work seamlessly in multiplayer. Only the host needs to have the mod installed for all players to benefit from the new Features that it brings. This means you can enjoy the excitement of finding upgrade items and drones together with your friends, without requiring everyone to install the mod.
+This mod is designed to work seamlessly in multiplayer. Only the host needs to have the mod installed for all players to benefit from the new Features that it brings. This means you can enjoy the excitement of hunting for rare upgrade items together with your friends, without requiring everyone to install the mod.
 
 ## 📦 Extraction Point Integration
 Found a valuable upgrade or drone during your run? Bring it to any extraction point, and it will be sucked up and automatically added to your bought Items! The item will be waiting for you in the Lobby Level to use in your next run.
@@ -16,6 +16,8 @@ Found a valuable upgrade or drone during your run? Bring it to any extraction po
 ## ⚙️ Configuration
 Configure the mod through the BepInEx config file.
 It is recommended to use the [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/) UI for easier configuration in-game.
+
+![image](https://github.com/user-attachments/assets/8cf2b6a5-e2b0-4396-ab30-9df6ba8fb6fc)
 
 ### Upgrade Items
 | Setting | Description | Default |
