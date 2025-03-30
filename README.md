@@ -45,7 +45,7 @@ Please note that you have to start the game with the mod installed at least once
 ## 🔮 Planned Features
 - Support for additional item types
 - Custom item distributions based on level difficulty
-- Additional configuration options
+- Killed enemies may drop upgrades or healing items
 
 ## ⚠️ Known Issues
 - Currently only supports item upgrades and drones (more item types coming in future updates)
