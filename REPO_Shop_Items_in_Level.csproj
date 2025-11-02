@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -22,7 +22,8 @@
   <!-- Post-build event to copy DLL to BepInEx scripts folder -->
   <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build">
     <PropertyGroup>
-      <PluginFolder>C:\Users\undefined\AppData\Roaming\r2modmanPlus-local\REPO\profiles\Default\BepInEx\plugins\Unknown-REPO_Shop_Items_in_Level</PluginFolder>
+      <!-- %AppData% has been a predefined Windows Environment Variable for years that resolves to the user profile's AppData folder. -->
+      <PluginFolder>$(AppData)\r2modmanPlus-local\REPO\profiles\Default\BepInEx\plugins\Unknown-REPO_Shop_Items_in_Level</PluginFolder>
     </PropertyGroup>
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginFolder)" />
     <Message Text="Copying $(TargetPath) to $(PluginFolder)" Importance="high" />
@@ -69,30 +70,8 @@
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference Include="R.E.P.O.GameLibs.Steam" Version="0.3.0-ngd.0" PrivateAssets="all" />
     <!-- <PackageReference Include="UnityEngine.Modules" Version="5.6.0" IncludeAssets="compile" /> -->
-
-    <!-- Add the DLL reference here -->
-    <Reference Include="Assembly-CSharp">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonUnityNetworking">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\PhotonUnityNetworking.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonRealtime">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\PhotonRealtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Photon3Unity3D">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\REPO\REPO_Data\Managed\Photon3Unity3D.dll</HintPath>
-    </Reference>
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
