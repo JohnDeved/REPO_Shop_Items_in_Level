@@ -64,6 +64,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.7.18**: Fixed compatibility breakage from the v0.3.0 Monster Update to R.E.P.O.
 - **1.7.15**: Added extraction point integration - items are now properly processed and saved when brought to extraction points within the level
 - **1.6.15**: Added per-item-type configuration for item selection method (shop price-based or equal chance)
 - **1.5.15**: fixed bug where cart would not show up in the map anymore
