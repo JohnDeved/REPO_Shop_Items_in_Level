@@ -218,7 +218,9 @@ public class Plugin : BaseUnityPlugin
         }
         else
         {
-            spawnedObj = Object.Instantiate(item.prefab, position, rotation);
+            var prefab = Resources.Load<GameObject>("Items/" + item.name);
+            if (prefab == null) return null;
+            spawnedObj = Object.Instantiate(prefab, position, rotation);
         }
         
         // Add tracker component to the spawned item
@@ -367,7 +369,7 @@ public class Plugin : BaseUnityPlugin
                 var itemAttr = gameObject.GetComponent<ItemAttributes>();
 
                 Logger.LogInfo($"Adding item {gameObject.name} to purchased items");
-                StatsManager.instance.ItemPurchase(itemAttr.item.itemAssetName);
+                StatsManager.instance.ItemPurchase(itemAttr.item.name);
 
                 Logger.LogInfo($"Destroying spawned item {gameObject.name} in extraction point {__instance.name}");
                 gameObject.GetComponent<PhysGrabObject>().DestroyPhysGrabObject();
@@ -375,3 +377,4 @@ public class Plugin : BaseUnityPlugin
         }
     }
 }
+
