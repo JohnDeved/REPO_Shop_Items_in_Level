@@ -37,6 +37,12 @@ It is recommended to use the [REPOConfig](https://thunderstore.io/c/repo/p/nickk
 | `DroneItemsSpawnChance` | Percentage chance (0-100) for drone items to spawn on a valid spawn point | `0.95%` |
 | `UseShopPriceForItemSelection` | If ON: Cheaper drone items appear more often. If OFF: All drone items have equal chance | `true` |
 
+### Health Packs
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `SpawnHealthPacksFromEnemies` | Enable/disable health packs spawning when enemies die | `true` |
+| `HealthPackDropChance` | Percentage chance (0-100) for a health pack to drop when an enemy dies | `100%` |
+
 ### Item Allow List
 The mod supports controlling which specific upgrade items can spawn in levels. In the config file, you'll find two sections:
 - `[AllowedItems Upgrades]` - Controls which upgrade items can spawn
