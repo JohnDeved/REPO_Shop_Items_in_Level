@@ -22,7 +22,6 @@
   <!-- Post-build event to copy DLL to BepInEx scripts folder -->
   <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build">
     <PropertyGroup>
-      <!-- %AppData% has been a predefined Windows Environment Variable for years that resolves to the user profile's AppData folder. -->
       <PluginFolder>$(AppData)\r2modmanPlus-local\REPO\profiles\Default\BepInEx\plugins\Unknown-REPO_Shop_Items_in_Level</PluginFolder>
     </PropertyGroup>
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginFolder)" />
@@ -78,3 +77,4 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
 </Project>
+
