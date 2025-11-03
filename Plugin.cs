@@ -301,7 +301,7 @@ public class Plugin : BaseUnityPlugin
                 Logger.LogInfo($"Enemy {__instance.name} spawned a valuable!");
 
                 // Check if we should spawn a health pack based on drop chance
-                if (Random.Range(0f, 100f) > HealthPackDropChance.Value)
+                if (HealthPackDropChance.Value < 100f && Random.Range(0f, 100f) >= HealthPackDropChance.Value)
                 {
                     Logger.LogInfo($"Health pack spawn roll failed (chance: {HealthPackDropChance.Value}%)");
                     return;
