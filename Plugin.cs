@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using Photon.Pun;
-using System.Collections;
 namespace REPO_Shop_Items_in_Level;
 
 public class UsedVolumeTracker : MonoBehaviour { }
@@ -375,8 +373,8 @@ public class Plugin : BaseUnityPlugin
             {
                 var itemAttr = gameObject.GetComponent<ItemAttributes>();
 
-                Logger.LogInfo($"Adding item {gameObject.name} to purchased items");
-                StatsManager.instance.ItemPurchase(itemAttr.item.itemName);
+                Logger.LogInfo($"Adding item {itemAttr.itemAssetName} to purchased items");
+                StatsManager.instance.ItemPurchase(itemAttr.itemAssetName);
 
                 Logger.LogInfo($"Destroying spawned item {gameObject.name} in extraction point {__instance.name}");
                 gameObject.GetComponent<PhysGrabObject>().DestroyPhysGrabObject();
