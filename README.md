@@ -67,6 +67,7 @@ If you do not see the configuration file, follow these steps:
 4. If the configuration file is still not generated, verify the mod version and update if necessary.
 
 ## 📝 Version History
+- **1.7.20**: Added configuration options for health pack drops from enemies (enable/disable and drop chance)
 - **1.7.19**: Fixed extraction point freeze issue
 - **1.7.18**: Updated for 0.3 Monster update
 - **1.7.15**: Added extraction point integration - items are now properly processed and saved when brought to extraction points within the level
