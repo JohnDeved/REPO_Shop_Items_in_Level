@@ -27,6 +27,9 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> DroneItemSpawnChance;
     internal static ConfigEntry<bool> UseShopPriceForDroneItems;
 
+    internal static ConfigEntry<bool> SpawnHealthPacksFromEnemies;
+    internal static ConfigEntry<float> HealthPackDropChance;
+
     internal static List<ConfigEntry<bool>> DisallowedItems;
 
     private Harmony harmony;
@@ -59,6 +62,9 @@ public class Plugin : BaseUnityPlugin
         MapHideDroneItems = Config.Bind("DroneItems", "MapHideDroneItems", true, new ConfigDescription("(Client) Whether drone items are hidden on the map"));
         DroneItemSpawnChance = Config.Bind("DroneItems", "DroneItemsSpawnChance", 0.95f, new ConfigDescription("% chance for a drone item to spawn", new AcceptableValueRange<float>(0.0f, 100.0f)));
         UseShopPriceForDroneItems = Config.Bind("DroneItems", "UseShopPriceForItemSelection", true, new ConfigDescription("If ON: Cheaper drone items appear more often. If OFF: All drone items have equal chance."));
+
+        SpawnHealthPacksFromEnemies = Config.Bind("HealthPacks", "SpawnHealthPacksFromEnemies", true, new ConfigDescription("Whether health packs can spawn when enemies die"));
+        HealthPackDropChance = Config.Bind("HealthPacks", "HealthPackDropChance", 100.0f, new ConfigDescription("% chance for a health pack to spawn when an enemy dies", new AcceptableValueRange<float>(0.0f, 100.0f)));
     }
 
     // [HarmonyPatch(typeof(StatsManager), "LoadItemsFromFolder")]
@@ -285,10 +291,22 @@ public class Plugin : BaseUnityPlugin
         static void Postfix(EnemyParent __instance, int __state)
         {
             if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
+
+            // Check if health pack spawning from enemies is disabled
+            if (!SpawnHealthPacksFromEnemies.Value) return;
+
             // If valuable spawned (count increased), spawn our additional item
             if (GetEnemySpawnValuableCurrent(__instance) > __state)
             {
                 Logger.LogInfo($"Enemy {__instance.name} spawned a valuable!");
+
+                // Check if we should spawn a health pack based on drop chance
+                if (Random.Range(0f, 100f) >= HealthPackDropChance.Value)
+                {
+                    Logger.LogInfo($"Health pack spawn roll failed (chance: {HealthPackDropChance.Value}%)");
+                    return;
+                }
+
                 if (GetRandomItemOfType(SemiFunc.itemType.healthPack, out var item))
                 {
                     // Spawn the item at the enemy's position
