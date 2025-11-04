@@ -5,7 +5,7 @@
 ## ✨ Overview
 This mod enhances gameplay by allowing upgrade items and drones (normally only available in shops) to spawn throughout levels as findable loot. Hunt for valuable upgrade items as you explore!
 
-Enemies now also have a chance to drop a health upgrade when killed.
+NEW: Enemies now also have a configurable chance to drop a health upgrade when killed.
 
 ## 🕹️ Multiplayer Friendly
 This mod is designed to work seamlessly in multiplayer. Only the host needs to have the mod installed for all players to benefit from the new Features that it brings. This means you can enjoy the excitement of hunting for rare upgrade items together with your friends, without requiring everyone to install the mod.
