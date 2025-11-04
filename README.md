@@ -52,20 +52,6 @@ Each item has its own toggle to enable or disable spawning. These lists include 
 
 Please note that you have to start the game with the mod installed at least once to generate the configuration options.
 
-## ⚠️ Known Issues
-- Currently only supports item upgrades and drones (more item types coming in future updates)
-- Please report any issues [here](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues)
-
-## ❓ Troubleshooting
-
-### [No config file](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues/7)
-If you do not see the configuration file, follow these steps:
-
-1. Start the game with the mod installed at least once to generate the configuration file.
-2. Check the `\BepInEx\config` directory for the file named `REPO_Shop_Items_in_Level.cfg`.
-3. Ensure you are using mod version 1.1.2 or higher, as the configuration file is only generated for these versions.
-4. If the configuration file is still not generated, verify the mod version and update if necessary.
-
 ## 📝 Version History
 - **1.7.20**: Added configuration options for health pack drops from enemies (enable/disable and drop chance)
 - **1.7.19**: Fixed extraction point freeze issue
