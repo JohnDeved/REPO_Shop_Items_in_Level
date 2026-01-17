@@ -70,42 +70,12 @@ Please note that you have to start the game with the mod installed at least once
 
 ## ❓ Troubleshooting
 
-### Upgrades become invisible or don't apply effects
-**Symptom:** When using upgrades in a level, the upgrade becomes invisible and/or effects don't apply properly.
-
-**Cause:** This issue is caused by a conflict with the **TeamUpgrades** (or SharedUpgrades) mod by EvilCheetah.
-
-**Solution:** Disable the TeamUpgrades mod or check for updates that may resolve the compatibility issue. See [EvilCheetah/repo.mods#25](https://github.com/EvilCheetah/repo.mods/issues/25) for more details.
-
----
-
-### Found drones/upgrades disappear after the level
-**Symptom:** Drones or upgrades you found during a level disappear when you go to the next map or shop.
-
-**Cause:** This is expected behavior - items found in levels are not automatically saved.
-
-**Solution:** Bring the items to an **extraction point** before leaving the level. The item will be sucked up and automatically added to your bought items.
-
----
-
-### Game stuck on "Level Loading Screen" with modded drones
-**Symptom:** The game freezes on the level loading screen, particularly when a modded drone is about to spawn.
-
-**Cause:** Some modded drones may not be fully compatible with this mod's spawning system.
-
-**Solution:** Disable the specific modded drone from spawning in the config file:
-1. Open the BepInEx config file or use [REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/)
-2. Navigate to `[AllowedItems Drones]`
-3. Set the problematic drone to `false`
-
----
-
-### General troubleshooting steps
-If you encounter issues not listed above:
-1. **Check for mod conflicts:** Try disabling other mods one by one to identify conflicts
-2. **Verify mod versions:** Ensure you have the latest version of this mod and all dependencies
-3. **Check BepInEx logs:** Look at `BepInEx/LogOutput.log` for error messages that may help identify the issue
-4. **Report the issue:** If the problem persists, [open an issue](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues) with your logs and a description of the problem
+| Issue | Solution |
+|-------|----------|
+| Upgrades become invisible or don't apply | Conflict with TeamUpgrades mod. Disable it or see [this issue](https://github.com/EvilCheetah/repo.mods/issues/25) |
+| Items disappear after the level | Bring items to an extraction point to save them |
+| Game freezes when spawning modded drones | Disable the drone in `[AllowedItems Drones]` config |
+| Other issues | Check `BepInEx/LogOutput.log` and [report here](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues)
 
 ## 👤 Credits
 Created by JohnDeved (undefined)  
