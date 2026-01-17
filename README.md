@@ -72,7 +72,7 @@ Please note that you have to start the game with the mod installed at least once
 
 | Issue | Solution |
 |-------|----------|
-| Upgrades become invisible or don't apply | Conflict with TeamUpgrades mod. Disable it or see [this issue](https://github.com/EvilCheetah/repo.mods/issues/25) |
+| Upgrades become invisible or don't apply | Conflict with mods that share upgrades (TeamUpgrades, RepoUtilities). Disable them |
 | Items disappear after the level | Bring items to an extraction point to save them |
 | Game freezes when spawning modded drones | Disable the drone in `[AllowedItems Drones]` config |
 | Other issues | Check `BepInEx/LogOutput.log` and [report here](https://github.com/JohnDeved/REPO_Shop_Items_in_Level/issues)
