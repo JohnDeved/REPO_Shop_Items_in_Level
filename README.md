@@ -53,6 +53,7 @@ Each item has its own toggle to enable or disable spawning. These lists include 
 Please note that you have to start the game with the mod installed at least once to generate the configuration options.
 
 ## 📝 Version History
+- **1.7.21**: Added compatibility for the 05/07/26 cosmetic update by supporting the renamed valuable spawn hook
 - **1.7.20**: Added configuration options for health pack drops from enemies (enable/disable and drop chance)
 - **1.7.19**: Fixed extraction point freeze issue
 - **1.7.18**: Updated for 0.3 Monster update

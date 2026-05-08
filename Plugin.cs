@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using Photon.Pun;
+using System.Reflection;
 namespace REPO_Shop_Items_in_Level;
 
 public class UsedVolumeTracker : MonoBehaviour { }
@@ -322,11 +323,24 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    [HarmonyPatch(typeof(ValuableDirector), "Spawn")]
-    [HarmonyPrefix]
-    public static void ValuableDirector_Spawn_Prefix(GameObject _valuable, ValuableVolume _volume, string _path)
+    [HarmonyPatch]
+    class ValuableDirector_Spawn_Patch
     {
-        _volume.gameObject.AddComponent<UsedVolumeTracker>();
+        static MethodBase TargetMethod()
+        {
+            return AccessTools.Method(typeof(ValuableDirector), "Spawn")
+                ?? AccessTools.Method(typeof(ValuableDirector), "SpawnValuable");
+        }
+
+        [HarmonyPrefix]
+        static void Prefix(object[] __args)
+        {
+            var volume = __args.OfType<ValuableVolume>().FirstOrDefault();
+            if (volume != null)
+            {
+                volume.gameObject.AddComponent<UsedVolumeTracker>();
+            }
+        }
     }
 
     [HarmonyPatch(typeof(ValuableDirector), nameof(ValuableDirector.VolumesAndSwitchSetup))]
