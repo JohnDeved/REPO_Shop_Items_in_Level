@@ -20,9 +20,9 @@
   </PropertyGroup>
 
   <!-- Post-build event to copy DLL to BepInEx scripts folder -->
-  <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build">
+  <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build" Condition="'$(AppData)' != '' and Exists('$(AppData)')">
     <PropertyGroup>
-      <PluginFolder>$(AppData)\r2modmanPlus-local\REPO\profiles\Default\BepInEx\plugins\Unknown-REPO_Shop_Items_in_Level</PluginFolder>
+      <PluginFolder>$(AppData)/r2modmanPlus-local/REPO/profiles/Default/BepInEx/plugins/Unknown-REPO_Shop_Items_in_Level</PluginFolder>
     </PropertyGroup>
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginFolder)" />
     <Message Text="Copying $(TargetPath) to $(PluginFolder)" Importance="high" />
@@ -32,8 +32,8 @@
   <Target Name="PackageThunderstoreMod" AfterTargets="Build">
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)Thunderstore</ThunderstoreDir>
-      <PackageDir>$(ThunderstoreDir)\package</PackageDir>
-      <ZipFile>$(ThunderstoreDir)\$(AssemblyName)-$(Version).zip</ZipFile>
+      <PackageDir>$(ThunderstoreDir)/package</PackageDir>
+      <ZipFile>$(ThunderstoreDir)/$(AssemblyName)-$(Version).zip</ZipFile>
     </PropertyGroup>
     
     <!-- Create necessary directories -->
@@ -43,10 +43,6 @@
     <!-- Clean the package directory -->
     <RemoveDir Directories="$(PackageDir)" />
     <MakeDir Directories="$(PackageDir)" />
-    
-    <!-- Update manifest version to match project version -->
-    <Exec Command="powershell -Command &quot;$manifest = Get-Content -Raw '$(ProjectDir)manifest.json' | ConvertFrom-Json; $manifest.version_number = '$(Version)'; $manifest | ConvertTo-Json | Set-Content -Path '$(ProjectDir)manifest.json'&quot;" />
-    <Message Text="Updated manifest.json version to $(Version)" Importance="high" />
     
     <!-- Copy files to the package directory -->
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageDir)" />
@@ -58,9 +54,8 @@
     <Warning Text="icon.png not found! This file is required for Thunderstore. Please add an icon.png file (256x256 PNG recommended)." 
              Condition="!Exists('$(ProjectDir)icon.png')" />
     
-    <!-- Create zip file using PowerShell -->
-    <Delete Files="$(ZipFile)" Condition="Exists('$(ZipFile)')" />
-    <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(PackageDir)\*' -DestinationPath '$(ZipFile)' -Force&quot;" />
+    <!-- Create zip file -->
+    <ZipDirectory SourceDirectory="$(PackageDir)" DestinationFile="$(ZipFile)" Overwrite="true" />
     
     <Message Text="Thunderstore package created at $(ZipFile)" Importance="high" />
   </Target>
