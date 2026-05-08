@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <!-- Post-build event to copy DLL to BepInEx scripts folder -->
-  <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build" Condition="'$(AppData)' != '' and Exists('$(AppData)')">
+  <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT' and '$(AppData)' != '' and Exists('$(AppData)')">
     <PropertyGroup>
       <PluginFolder>$([System.IO.Path]::Combine('$(AppData)', 'r2modmanPlus-local', 'REPO', 'profiles', 'Default', 'BepInEx', 'plugins', 'Unknown-REPO_Shop_Items_in_Level'))</PluginFolder>
     </PropertyGroup>

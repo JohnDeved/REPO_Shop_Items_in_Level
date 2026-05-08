@@ -1,0 +1,76 @@
+name: Build and release
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5.2.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build project
+        run: dotnet build "${{ github.workspace }}/REPO_Shop_Items_in_Level.sln" --configuration Release
+
+      - name: Upload Thunderstore package
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: REPO_Shop_Items_in_Level-${{ github.sha }}
+          path: |
+            ${{ github.workspace }}/Thunderstore/*.zip
+            ${{ github.workspace }}/Thunderstore/package/**
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Verify tagged commit is on main or master
+        id: branch_check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git branch -r --contains "$GITHUB_SHA" | grep -Eq 'origin/(main|master)$'; then
+            echo "eligible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "Tag $GITHUB_REF_NAME does not point to a commit on main or master."
+          fi
+
+      - name: Download build artifact
+        if: steps.branch_check.outputs.eligible == 'true'
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: REPO_Shop_Items_in_Level-${{ github.sha }}
+          path: ${{ github.workspace }}/release-artifacts
+
+      - name: Create GitHub release
+        if: steps.branch_check.outputs.eligible == 'true'
+        uses: softprops/action-gh-release@v3.0.0
+        with:
+          files: ${{ github.workspace }}/release-artifacts/*.zip
