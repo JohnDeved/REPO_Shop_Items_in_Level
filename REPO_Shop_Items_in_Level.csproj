@@ -22,7 +22,7 @@
   <!-- Post-build event to copy DLL to BepInEx scripts folder -->
   <Target Name="CopyDLLToScriptsFolder" AfterTargets="Build" Condition="'$(AppData)' != '' and Exists('$(AppData)')">
     <PropertyGroup>
-      <PluginFolder>$(AppData)/r2modmanPlus-local/REPO/profiles/Default/BepInEx/plugins/Unknown-REPO_Shop_Items_in_Level</PluginFolder>
+      <PluginFolder>$([System.IO.Path]::Combine('$(AppData)', 'r2modmanPlus-local', 'REPO', 'profiles', 'Default', 'BepInEx', 'plugins', 'Unknown-REPO_Shop_Items_in_Level'))</PluginFolder>
     </PropertyGroup>
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginFolder)" />
     <Message Text="Copying $(TargetPath) to $(PluginFolder)" Importance="high" />
@@ -32,8 +32,8 @@
   <Target Name="PackageThunderstoreMod" AfterTargets="Build">
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)Thunderstore</ThunderstoreDir>
-      <PackageDir>$(ThunderstoreDir)/package</PackageDir>
-      <ZipFile>$(ThunderstoreDir)/$(AssemblyName)-$(Version).zip</ZipFile>
+      <PackageDir>$([System.IO.Path]::Combine('$(ThunderstoreDir)', 'package'))</PackageDir>
+      <ZipFile>$([System.IO.Path]::Combine('$(ThunderstoreDir)', '$(AssemblyName)-$(Version).zip'))</ZipFile>
     </PropertyGroup>
     
     <!-- Create necessary directories -->
@@ -44,6 +44,7 @@
     <RemoveDir Directories="$(PackageDir)" />
     <MakeDir Directories="$(PackageDir)" />
     
+    <!-- Keep manifest.json version in sync with $(Version); the build packages the checked-in file without mutating repository files. -->
     <!-- Copy files to the package directory -->
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageDir)" />
     <Copy SourceFiles="$(ProjectDir)manifest.json" DestinationFolder="$(PackageDir)" />
