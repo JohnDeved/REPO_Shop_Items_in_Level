@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   build:
@@ -28,6 +29,7 @@ jobs:
         run: dotnet build "${{ github.workspace }}/REPO_Shop_Items_in_Level.sln" --configuration Release
 
       - name: Upload Thunderstore package
+        id: upload_artifact
         uses: actions/upload-artifact@v7.0.1
         with:
           name: REPO_Shop_Items_in_Level-${{ github.sha }}
@@ -35,6 +37,51 @@ jobs:
             ${{ github.workspace }}/Thunderstore/*.zip
             ${{ github.workspace }}/Thunderstore/package/**
           if-no-files-found: error
+
+      - name: Post artifact link to pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9.0.0
+        env:
+          ARTIFACT_NAME: REPO_Shop_Items_in_Level-${{ github.sha }}
+          ARTIFACT_URL: ${{ steps.upload_artifact.outputs.artifact-url }}
+        with:
+          script: |
+            const marker = '<!-- repo-shop-items-in-level-artifact -->';
+            const body = [
+              marker,
+              `Build artifact for this PR: [${process.env.ARTIFACT_NAME}](${process.env.ARTIFACT_URL})`,
+            ].join('\n');
+
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+              });
+
+              const existing = comments.find(comment =>
+                comment.user?.type === 'Bot' && comment.body?.includes(marker)
+              );
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (error) {
+              core.warning(`Unable to post PR artifact comment: ${error.message}`);
+            }
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
