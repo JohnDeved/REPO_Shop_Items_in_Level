@@ -32,6 +32,7 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> HealthPackDropChance;
 
     internal static List<ConfigEntry<bool>> AllowedItemConfigEntries;
+    private static HashSet<string> cachedDisallowedItemNames;
     private static int cachedItemCount = -1;
 
     private Harmony harmony;
@@ -98,11 +99,27 @@ public class Plugin : BaseUnityPlugin
                     continue; // Skip other item types
             }
 
+            configEntry.SettingChanged -= AllowedItemConfigEntry_SettingChanged;
+            configEntry.SettingChanged += AllowedItemConfigEntry_SettingChanged;
             allowedItemConfigEntries.Add(configEntry);
         }
 
         AllowedItemConfigEntries = allowedItemConfigEntries;
+        cachedDisallowedItemNames = null;
         cachedItemCount = items.Count;
+    }
+
+    private static void AllowedItemConfigEntry_SettingChanged(object sender, System.EventArgs e)
+    {
+        cachedDisallowedItemNames = null;
+    }
+
+    private static HashSet<string> GetDisallowedItemNames()
+    {
+        return cachedDisallowedItemNames ??= AllowedItemConfigEntries?
+            .Where(cfg => !cfg.Value)
+            .Select(cfg => cfg.Definition.Key)
+            .ToHashSet();
     }
 
     [HarmonyPatch]
@@ -110,12 +127,15 @@ public class Plugin : BaseUnityPlugin
     {
         static IEnumerable<MethodBase> TargetMethods()
         {
+            var methods = new List<MethodBase>();
             foreach (var methodName in new[] { "LoadItemsFromFolder", "ItemsInitialize" })
             {
                 var method = AccessTools.Method(typeof(StatsManager), methodName);
-                if (method != null) yield return method;
-                else Logger.LogDebug($"StatsManager.{methodName} not found; skipping allowed item config refresh patch.");
+                if (method != null) methods.Add(method);
             }
+
+            if (methods.Count == 0) Logger.LogWarning("No StatsManager item load methods found; allowed item config will rely on fallback refreshes.");
+            return methods;
         }
 
         static void Postfix()
@@ -135,10 +155,7 @@ public class Plugin : BaseUnityPlugin
     {
         item = null;
         RefreshAllowedItemsConfig();
-        var disallowedItemNames = AllowedItemConfigEntries?
-            .Where(cfg => !cfg.Value)
-            .Select(cfg => cfg.Definition.Key)
-            .ToHashSet();
+        var disallowedItemNames = GetDisallowedItemNames();
 
         // --- 1. Filter Candidate Items ---
         var possibleItems = StatsManager.instance.itemDictionary.Values
