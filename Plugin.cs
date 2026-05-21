@@ -51,6 +51,7 @@ public class Plugin : BaseUnityPlugin
         harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.PatchAll(typeof(Plugin));
         harmony.PatchAll(typeof(DespawnPatch));
+        harmony.PatchAll(typeof(StatsManager_ItemLoad_Patch));
 
         Logger.LogInfo("Harmony patches applied!");
 
@@ -68,22 +69,20 @@ public class Plugin : BaseUnityPlugin
         HealthPackDropChance = Config.Bind("HealthPacks", "HealthPackDropChance", 100.0f, new ConfigDescription("% chance for a health pack to spawn when an enemy dies", new AcceptableValueRange<float>(0.0f, 100.0f)));
     }
 
-    // [HarmonyPatch(typeof(StatsManager), "LoadItemsFromFolder")]
-    // changed to mainmenu load because of modded items
-    [HarmonyPatch(typeof(MainMenuOpen), "Awake")]
-    [HarmonyPostfix]
-    public static void MainMenuOpen_Awake_Postfix(StatsManager __instance)
+    private static void RefreshAllowedItemsConfig()
     {
-        if (DisallowedItems != null) return;
-        Logger.LogInfo("Initializing disallowed items list");
-        DisallowedItems = new List<ConfigEntry<bool>>();
+        if (Instance?.Config == null || StatsManager.instance?.itemDictionary == null) return;
+
+        Logger.LogInfo("Refreshing allowed items list");
+        var disallowedItems = new List<ConfigEntry<bool>>();
         foreach (var item in StatsManager.instance.itemDictionary.Values)
         {
+            if (item == null || string.IsNullOrEmpty(item.name)) continue;
+
             ConfigEntry<bool> configEntry;
             switch (item.itemType)
             {
                 case SemiFunc.itemType.item_upgrade:
-                    // check if config entry already exists
                     configEntry = Instance.Config.Bind("AllowedItems Upgrades", item.name, true,
                         new ConfigDescription("Whether this upgrade item can spawn in levels"));
                     break;
@@ -95,19 +94,47 @@ public class Plugin : BaseUnityPlugin
                     continue; // Skip other item types
             }
 
-            if (!configEntry.Value) DisallowedItems.Add(configEntry);
+            if (!configEntry.Value) disallowedItems.Add(configEntry);
         }
+
+        DisallowedItems = disallowedItems;
+    }
+
+    [HarmonyPatch]
+    class StatsManager_ItemLoad_Patch
+    {
+        static IEnumerable<MethodBase> TargetMethods()
+        {
+            foreach (var methodName in new[] { "LoadItemsFromFolder", "ItemsInitialize" })
+            {
+                var method = AccessTools.Method(typeof(StatsManager), methodName);
+                if (method != null) yield return method;
+            }
+        }
+
+        static void Postfix()
+        {
+            RefreshAllowedItemsConfig();
+        }
+    }
+
+    [HarmonyPatch(typeof(MainMenuOpen), "Awake")]
+    [HarmonyPostfix]
+    public static void MainMenuOpen_Awake_Postfix()
+    {
+        RefreshAllowedItemsConfig();
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
     {
         item = null;
+        RefreshAllowedItemsConfig();
 
         // --- 1. Filter Candidate Items ---
         var possibleItems = StatsManager.instance.itemDictionary.Values
             .Where(i => i.itemType == itemType) // Type check
             .Where(i => i.value != null && i.value.valueMin > 0f) // Validity & Value check
-            .Where(i => !DisallowedItems.Any(cfg => cfg.Definition.Key == i.name && !cfg.Value)) // Blacklist
+            .Where(i => DisallowedItems == null || !DisallowedItems.Any(cfg => cfg.Definition.Key == i.name && !cfg.Value)) // Blacklist
             .ToList();
 
         // --- 2. Handle No Valid Items Found ---
