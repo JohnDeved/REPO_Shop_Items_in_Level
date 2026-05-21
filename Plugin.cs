@@ -32,6 +32,7 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<float> HealthPackDropChance;
 
     internal static List<ConfigEntry<bool>> DisallowedItems;
+    private static int AllowedItemsConfigItemCount = -1;
 
     private Harmony harmony;
 
@@ -69,13 +70,16 @@ public class Plugin : BaseUnityPlugin
         HealthPackDropChance = Config.Bind("HealthPacks", "HealthPackDropChance", 100.0f, new ConfigDescription("% chance for a health pack to spawn when an enemy dies", new AcceptableValueRange<float>(0.0f, 100.0f)));
     }
 
-    private static void RefreshAllowedItemsConfig()
+    private static void RefreshAllowedItemsConfig(bool force = false)
     {
         if (Instance?.Config == null || StatsManager.instance?.itemDictionary == null) return;
 
+        var items = StatsManager.instance.itemDictionary.Values.ToList();
+        if (!force && DisallowedItems != null && AllowedItemsConfigItemCount == items.Count) return;
+
         Logger.LogInfo("Refreshing allowed items list");
         var disallowedItems = new List<ConfigEntry<bool>>();
-        foreach (var item in StatsManager.instance.itemDictionary.Values)
+        foreach (var item in items)
         {
             if (item == null || string.IsNullOrEmpty(item.name)) continue;
 
@@ -98,6 +102,7 @@ public class Plugin : BaseUnityPlugin
         }
 
         DisallowedItems = disallowedItems;
+        AllowedItemsConfigItemCount = items.Count;
     }
 
     [HarmonyPatch]
@@ -109,12 +114,13 @@ public class Plugin : BaseUnityPlugin
             {
                 var method = AccessTools.Method(typeof(StatsManager), methodName);
                 if (method != null) yield return method;
+                else Logger.LogDebug($"StatsManager.{methodName} not found; skipping allowed item config refresh patch for it.");
             }
         }
 
         static void Postfix()
         {
-            RefreshAllowedItemsConfig();
+            RefreshAllowedItemsConfig(true);
         }
     }
 
@@ -122,7 +128,7 @@ public class Plugin : BaseUnityPlugin
     [HarmonyPostfix]
     public static void MainMenuOpen_Awake_Postfix()
     {
-        RefreshAllowedItemsConfig();
+        RefreshAllowedItemsConfig(true);
     }
 
     private static bool GetRandomItemOfType(SemiFunc.itemType itemType, out Item item)
