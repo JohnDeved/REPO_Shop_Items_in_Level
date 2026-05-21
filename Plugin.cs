@@ -31,8 +31,8 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<bool> SpawnHealthPacksFromEnemies;
     internal static ConfigEntry<float> HealthPackDropChance;
 
-    internal static List<ConfigEntry<bool>> DisallowedItems;
-    private static int AllowedItemsConfigItemCount = -1;
+    internal static List<ConfigEntry<bool>> AllowedItemConfigEntries;
+    private static int cachedItemCount = -1;
 
     private Harmony harmony;
 
@@ -75,10 +75,10 @@ public class Plugin : BaseUnityPlugin
         if (Instance?.Config == null || StatsManager.instance?.itemDictionary == null) return;
 
         var items = StatsManager.instance.itemDictionary.Values.ToList();
-        if (!force && DisallowedItems != null && AllowedItemsConfigItemCount == items.Count) return;
+        if (!force && AllowedItemConfigEntries != null && cachedItemCount == items.Count) return;
 
         Logger.LogInfo("Refreshing allowed items list");
-        var disallowedItems = new List<ConfigEntry<bool>>();
+        var allowedItemConfigEntries = new List<ConfigEntry<bool>>();
         foreach (var item in items)
         {
             if (item == null || string.IsNullOrEmpty(item.name)) continue;
@@ -98,11 +98,11 @@ public class Plugin : BaseUnityPlugin
                     continue; // Skip other item types
             }
 
-            if (!configEntry.Value) disallowedItems.Add(configEntry);
+            allowedItemConfigEntries.Add(configEntry);
         }
 
-        DisallowedItems = disallowedItems;
-        AllowedItemsConfigItemCount = items.Count;
+        AllowedItemConfigEntries = allowedItemConfigEntries;
+        cachedItemCount = items.Count;
     }
 
     [HarmonyPatch]
@@ -114,7 +114,7 @@ public class Plugin : BaseUnityPlugin
             {
                 var method = AccessTools.Method(typeof(StatsManager), methodName);
                 if (method != null) yield return method;
-                else Logger.LogDebug($"StatsManager.{methodName} not found; skipping allowed item config refresh patch for it.");
+                else Logger.LogDebug($"StatsManager.{methodName} not found; skipping allowed item config refresh patch.");
             }
         }
 
@@ -135,12 +135,16 @@ public class Plugin : BaseUnityPlugin
     {
         item = null;
         RefreshAllowedItemsConfig();
+        var disallowedItemNames = AllowedItemConfigEntries?
+            .Where(cfg => !cfg.Value)
+            .Select(cfg => cfg.Definition.Key)
+            .ToHashSet();
 
         // --- 1. Filter Candidate Items ---
         var possibleItems = StatsManager.instance.itemDictionary.Values
             .Where(i => i.itemType == itemType) // Type check
             .Where(i => i.value != null && i.value.valueMin > 0f) // Validity & Value check
-            .Where(i => DisallowedItems == null || !DisallowedItems.Any(cfg => cfg.Definition.Key == i.name && !cfg.Value)) // Blacklist
+            .Where(i => disallowedItemNames == null || !disallowedItemNames.Contains(i.name)) // Blacklist
             .ToList();
 
         // --- 2. Handle No Valid Items Found ---
